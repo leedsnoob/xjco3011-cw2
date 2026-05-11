@@ -8,6 +8,12 @@ This coursework uses a lightweight GitHub Flow:
 - `feature/high-score-workflow` documents the professional workflow and research basis.
 - `feature/test-quality-gates` strengthens automated testing and CI.
 - `feature/advanced-ranking` adds TF-IDF, BM25, explain, and benchmark features using TDD.
+- `feature/evidence-and-coverage` expands evidence and coverage.
+- `feature/extreme-case-hardening` covers malformed input and empty benchmark cases.
+- `feature/algorithm-comparison-evidence` adds benchmark comparison evidence.
+- `feature/release-quality-hardening` records engineering practice and release quality.
+- `feature/readme-open-source-polish` improves the repository entrypoint.
+- `feature/documentation-tone-review` checks project documentation tone and modern search practice evidence.
 - `release/v1.0.0` is used for final release checks, index refresh, and tag preparation.
 
 Each feature branch is merged back with a merge commit so the branch history remains visible in `git log --graph --decorate --all`.
@@ -24,7 +30,7 @@ Commit messages follow Conventional Commits:
 - `fix:` defect fixes.
 - `data:` generated index file.
 
-This makes the development history easy to explain in the video and demonstrates incremental work rather than a single final commit.
+This makes the development history easy to explain in the video and demonstrates incremental work across separate commits.
 
 ## TDD Workflow
 
@@ -55,16 +61,16 @@ The local target is at least 90% coverage, with the current project aiming highe
 
 ## Release Process
 
-The final submission is prepared on `release/v1.0.0`:
+Major submission checkpoints use release tags:
 
 1. Re-run the full verification suite.
 2. Refresh `data/index.json` with `python3 -m src.main build`.
 3. Update `README.md`, `docs/VIDEO_SCRIPT.md`, and `docs/BENCHMARKS.md`.
-4. Merge the release branch into `main`.
-5. Tag the final submission:
+4. Merge the feature or release branch into `main`.
+5. Tag the checkpoint:
 
 ```bash
-git tag -a v1.0.0 -m "Release coursework submission"
+git tag -a v1.0.6 -m "Release documentation tone review"
 ```
 
 This provides explicit evidence for branch strategy, semantic commits, and a release tag.

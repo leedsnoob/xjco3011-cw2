@@ -1,11 +1,20 @@
 # Changelog
 
+## v1.0.6 - Documentation Tone Review
+
+### Changed
+
+- Reviewed project-authored documentation for English clarity, direct wording, and reduced template-like AI phrasing.
+- Added a modern search practice section comparing search-engine algorithms with Safari and Chrome browser search fields.
+- Added `docs/DOCUMENTATION_REVIEW.md` to record the documentation audit scope and verification commands.
+- Updated README and evidence documentation to reflect the documentation tone review branch.
+
 ## v1.0.5 - README Documentation Polish
 
 ### Changed
 
 - Reworked `README.md` into an open-source-style project entrypoint with badges, quick start, command reference, architecture, index format, ranking notes, performance summary, testing/CI evidence, troubleshooting, limitations, and coursework evidence links.
-- Clarified academic-use and environment-file expectations without adding unnecessary project configuration.
+- Clarified academic-use and environment-file expectations with no unnecessary project configuration.
 
 ## v1.0.4 - Release Quality Hardening
 

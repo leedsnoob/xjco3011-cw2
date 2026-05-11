@@ -8,7 +8,7 @@ Build a Python command-line search engine for `https://quotes.toscrape.com/` tha
 
 The tool will crawl the quote website, build a case-insensitive inverted index with word statistics, persist the index to `data/index.json`, reload it, and answer `print` and `find` commands from an interactive shell or one-shot command invocation.
 
-Out of scope: a web UI, distributed crawling, crawling external domains, and using a database server. These would add complexity without improving the coursework evidence.
+Out of scope: a web UI, distributed crawling, crawling external domains, and using a database server. These would add complexity while adding little coursework evidence.
 
 ## Architecture
 
@@ -19,7 +19,7 @@ The implementation is split into small modules with stable interfaces:
 - `src/search.py`: owns index persistence, index lookup, multi-term search, ranking, and query suggestions.
 - `src/main.py`: provides the command-line shell and output formatting.
 
-The modules communicate with plain Python data structures and dataclasses. This keeps the code easy to explain in the video and easy to test without live network access.
+The modules communicate with plain Python data structures and dataclasses. This keeps the code easy to explain in the video and easy to test with deterministic fixtures.
 
 ## Data Model
 
@@ -58,9 +58,9 @@ This design directly supports the rubric requirement for word statistics and ena
 
 The crawler starts at the base URL, fetches the current page, extracts quote text, author names, tags, and page title, then follows the `li.next > a` pagination link. It normalizes links with `urljoin`, ignores already-visited pages, and stops when no next link exists.
 
-For live requests, it enforces at least six seconds between successive requests. Tests will inject a fake sleep function and fake HTTP session so politeness can be verified without slow test runs.
+For live requests, it enforces at least six seconds between successive requests. Tests will inject a fake sleep function and fake HTTP session so politeness can be verified quickly.
 
-Network errors will not produce raw tracebacks in normal CLI use. The crawler raises clear `CrawlError` exceptions that the CLI can display.
+Network errors become clear `CrawlError` exceptions that the CLI can display in normal use.
 
 ## Indexing Behavior
 

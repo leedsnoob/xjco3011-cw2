@@ -46,7 +46,7 @@ Say:
 - The index maps each word to URLs and stores frequency plus positions.
 - TF-IDF and BM25 are computed from the crawled corpus; no training data is required.
 - BM25 uses default `k1=1.2` and `b=0.75` because there are no labelled relevance judgments for tuning.
-- The benchmark compares nearby BM25 settings to show ranking stability, but does not pretend to train a model.
+- The benchmark compares nearby BM25 settings to show ranking stability and makes no training claim.
 - The complexity evidence covers four tested search functions: word lookup, TF-IDF search, BM25 search, and phrase search.
 - Positions enable exact phrase search.
 - JSON is chosen because it is easy to inspect and submit.
@@ -61,7 +61,7 @@ python3 -m pytest --cov=src --cov-report=term-missing
 
 Say:
 
-- Tests mock HTTP and sleep, so crawler behavior is tested without waiting.
+- Tests mock HTTP and sleep, so crawler behavior is tested quickly.
 - Tests cover crawler, indexer, search, persistence, CLI, edge cases, TF-IDF, BM25, explain, and benchmark behavior.
 - The current local suite has 48 tests and 100% coverage.
 - The CI workflow runs tests and a coverage gate automatically.
@@ -85,6 +85,6 @@ Say:
 Summarize:
 
 - AI helped structure the project, design the inverted index, and draft tests.
-- A key correction was making the index store frequency and positions rather than only page lists.
+- A key correction was making the index store frequency and positions, beyond simple page lists.
 - AI suggestions were treated as drafts: ranking, environment, and edge-case behavior were checked with TDD, coverage, and manual CLI runs.
 - Ethical reflection: AI use must be declared, and I remain responsible for understanding and verifying all submitted code.
