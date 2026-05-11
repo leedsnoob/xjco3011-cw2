@@ -90,7 +90,7 @@ class SearchShell:
         if not word:
             print("Usage: print <word>")
             return
-        if not self.index:
+        if not self._ensure_index_loaded():
             print("No index loaded. Run 'build' or 'load' first.")
             return
         print(self.index.format_index_entry(word))
@@ -99,10 +99,19 @@ class SearchShell:
         if not query:
             print("Usage: find <query terms>")
             return
-        if not self.index:
+        if not self._ensure_index_loaded():
             print("No index loaded. Run 'build' or 'load' first.")
             return
         print(format_results(self.index.find(query), query, self.index))
+
+    def _ensure_index_loaded(self) -> bool:
+        if self.index:
+            return True
+        try:
+            self.index = self.index_store.load()
+        except FileNotFoundError:
+            return False
+        return True
 
 
 def help_text() -> str:

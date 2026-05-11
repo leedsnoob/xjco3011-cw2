@@ -39,6 +39,22 @@ def test_find_requires_query_and_loaded_index(tmp_path, capsys) -> None:
     assert "No index loaded" in output
 
 
+def test_find_auto_loads_existing_index_for_one_shot_usage(tmp_path, capsys) -> None:
+    from src.main import SearchShell
+    from src.search import IndexStore, SearchIndex
+
+    index_path = tmp_path / "index.json"
+    IndexStore(index_path).save(SearchIndex.from_dict(sample_index()))
+
+    shell = SearchShell(index_path=index_path)
+
+    assert shell.execute("find good friends") is True
+
+    output = capsys.readouterr().out
+
+    assert "https://quotes.toscrape.com/page/2/" in output
+
+
 def test_unknown_and_exit_commands(capsys) -> None:
     from src.main import SearchShell
 
