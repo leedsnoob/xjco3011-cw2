@@ -261,6 +261,68 @@ def test_invalid_ranker_options_report_user_error(tmp_path, capsys) -> None:
     assert output.count("Unknown ranker: bad") == 2
 
 
+def test_missing_ranker_query_reports_usage(tmp_path, capsys) -> None:
+    from src.main import SearchShell
+    from src.search import IndexStore, SearchIndex
+
+    index_path = tmp_path / "index.json"
+    IndexStore(index_path).save(SearchIndex.from_dict(sample_index()))
+
+    shell = SearchShell(index_path=index_path)
+
+    assert shell.execute("find --ranker") is True
+    assert shell.execute("find --ranker bm25") is True
+    assert shell.execute("explain --ranker") is True
+
+    output = capsys.readouterr().out
+
+    assert output.count("Usage: --ranker <frequency|tfidf|bm25> <query terms>") == 3
+
+
+def test_unmatched_quote_reports_malformed_query(tmp_path, capsys) -> None:
+    from src.main import SearchShell
+    from src.search import IndexStore, SearchIndex
+
+    index_path = tmp_path / "index.json"
+    IndexStore(index_path).save(SearchIndex.from_dict(sample_index()))
+
+    shell = SearchShell(index_path=index_path)
+
+    assert shell.execute('find "good friends') is True
+    assert shell.execute('explain "good friends') is True
+
+    output = capsys.readouterr().out
+
+    assert output.count("Malformed query: unmatched quote") == 2
+
+
+def test_bm25_grid_handles_empty_index_without_traceback(tmp_path, capsys) -> None:
+    from src.main import SearchShell
+    from src.search import IndexStore, SearchIndex
+
+    index_path = tmp_path / "index.json"
+    payload = {
+        "metadata": {
+            "base_url": "https://quotes.toscrape.com/",
+            "built_at": "2026-05-12T00:00:00+00:00",
+            "page_count": 0,
+            "document_lengths": {},
+        },
+        "pages": {},
+        "index": {},
+    }
+    IndexStore(index_path).save(SearchIndex.from_dict(payload))
+
+    shell = SearchShell(index_path=index_path)
+
+    assert shell.execute("benchmark --bm25-grid") is True
+
+    output = capsys.readouterr().out
+
+    assert "BM25 parameter comparison" in output
+    assert "No benchmark candidates" in output
+
+
 def test_explain_handles_usage_and_no_results(tmp_path, capsys) -> None:
     from src.main import SearchShell
     from src.search import IndexStore, SearchIndex

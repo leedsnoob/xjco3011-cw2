@@ -242,3 +242,13 @@ def test_unknown_ranker_is_rejected() -> None:
 
     with pytest.raises(ValueError, match="Unknown ranker"):
         search_index.find("good", ranker="not-real")
+
+
+def test_unmatched_quote_is_rejected_as_malformed_query() -> None:
+    import pytest
+    from src.search import SearchIndex
+
+    search_index = SearchIndex.from_dict(sample_index())
+
+    with pytest.raises(ValueError, match="Malformed query: unmatched quote"):
+        search_index.find('"good friends')
