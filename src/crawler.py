@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import time
+import warnings
 from dataclasses import dataclass
 from typing import Callable, Iterable
 from urllib.parse import urljoin
+
+warnings.filterwarnings("ignore", message="urllib3 v2 only supports OpenSSL")
 
 import requests
 from bs4 import BeautifulSoup

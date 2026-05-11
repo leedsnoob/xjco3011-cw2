@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import subprocess
+import sys
+
 from tests.test_search import sample_index
 
 
@@ -66,3 +69,14 @@ def test_unknown_and_exit_commands(capsys) -> None:
     output = capsys.readouterr().out
 
     assert "Unknown command" in output
+
+
+def test_importing_cli_does_not_emit_environment_warning() -> None:
+    result = subprocess.run(
+        [sys.executable, "-c", "import src.main"],
+        capture_output=True,
+        check=True,
+        text=True,
+    )
+
+    assert "NotOpenSSLWarning" not in result.stderr
