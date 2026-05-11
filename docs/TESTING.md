@@ -22,6 +22,8 @@ python3 -m compileall src tests
 
 Use `python3 -m pytest` rather than plain `pytest` if multiple Python environments are installed.
 
+The project uses `pyproject.toml` to configure pytest and coverage. The coverage gate is set to 90%, while the current suite is expected to remain above that threshold.
+
 ## Coverage Areas
 
 The test suite covers:
@@ -43,6 +45,14 @@ The test suite covers:
 - typo suggestions;
 - CLI `load`, `print`, `find`, `help`, unknown command, and `exit`.
 
+## Mocking Strategy
+
+The crawler is tested with a `FakeSession` instead of the live website. This makes request order, HTTP failures, and pagination loops deterministic. The sleep dependency is also injected, so tests can assert that the second request waits 6 seconds without slowing the suite.
+
+The search tests use a small deterministic in-memory index. This avoids coupling ranking and edge-case tests to the live website content.
+
+The CLI tests use temporary index files and subprocess checks. This verifies both direct command dispatch and user-facing command-line behavior.
+
 ## Why Mock the Crawler
 
 The coursework requires a live crawler, but automated tests should be fast and reliable. The crawler accepts injectable `session` and `sleep` dependencies, so tests can prove that:
@@ -53,6 +63,17 @@ The coursework requires a live crawler, but automated tests should be fast and r
 - parsing extracts the expected text.
 
 This avoids repeatedly hitting the live website during every test run.
+
+## Automated Test Pipeline
+
+The GitHub Actions workflow in `.github/workflows/tests.yml` runs on `main`, feature branches, release branches, and pull requests. It checks:
+
+- dependency installation from `requirements.txt`;
+- `python -m pytest --cov=src --cov-report=term-missing`;
+- the 90% coverage gate from `pyproject.toml`;
+- `python -m compileall src tests`.
+
+The workflow runs on Python 3.9 and 3.12 to show that the code works across the expected supported range.
 
 ## Manual Verification for Video
 

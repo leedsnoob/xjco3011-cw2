@@ -63,3 +63,40 @@ def test_crawler_wraps_request_failures_in_crawl_error() -> None:
 
     with pytest.raises(CrawlError, match="Failed to fetch"):
         list(crawler.crawl())
+
+
+def test_crawler_stops_when_page_has_no_next_link() -> None:
+    from src.crawler import QuoteCrawler
+
+    session = FakeSession({"https://quotes.toscrape.com/": PAGE_TWO_HTML})
+
+    pages = list(QuoteCrawler(session=session, sleep=lambda seconds: None).crawl())
+
+    assert len(pages) == 1
+    assert pages[0].next_url is None
+    assert session.requested_urls == ["https://quotes.toscrape.com/"]
+
+
+def test_crawler_does_not_revisit_duplicate_pagination_links() -> None:
+    from src.crawler import QuoteCrawler
+
+    looping_html = PAGE_ONE_HTML.replace('/page/2/', '/')
+    session = FakeSession({"https://quotes.toscrape.com/": looping_html})
+
+    pages = list(QuoteCrawler(session=session, sleep=lambda seconds: None).crawl())
+
+    assert len(pages) == 1
+    assert session.requested_urls == ["https://quotes.toscrape.com/"]
+
+
+def test_crawler_wraps_low_level_request_exception() -> None:
+    from src.crawler import CrawlError, QuoteCrawler
+
+    class BrokenSession:
+        def get(self, url: str, timeout: float, headers: dict[str, str]):
+            raise TimeoutError("request timed out")
+
+    crawler = QuoteCrawler(session=BrokenSession(), sleep=lambda seconds: None)
+
+    with pytest.raises(CrawlError, match="request timed out"):
+        list(crawler.crawl())
