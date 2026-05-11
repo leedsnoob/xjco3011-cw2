@@ -207,8 +207,14 @@ def test_cli_benchmark_command_reports_timings(tmp_path, capsys) -> None:
 
     assert "Benchmark results" in output
     assert "load_ms=" in output
+    assert "word_lookup_ms=" in output
     assert "tfidf_query_ms=" in output
     assert "bm25_query_ms=" in output
+    assert "phrase_query_ms=" in output
+    assert "explain_ms=" in output
+    assert "Ranking comparison:" in output
+    assert "tfidf_top=" in output
+    assert "bm25_top=" in output
 
 
 def test_cli_benchmark_can_compare_bm25_parameter_grid(tmp_path, capsys) -> None:
