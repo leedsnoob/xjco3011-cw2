@@ -12,6 +12,7 @@ from src.indexer import PageDocument, build_search_index
 from src.search import (
     DEFAULT_INDEX_PATH,
     IndexStore,
+    SearchResult,
     SearchIndex,
     format_explanations,
     format_results,
@@ -74,6 +75,8 @@ class SearchShell:
         return True
 
     def run(self) -> None:
+        """Run the interactive command loop until the user exits."""
+
         print("XJCO3011 search shell. Type 'help' for commands.")
         while True:
             try:
@@ -84,6 +87,8 @@ class SearchShell:
                 break
 
     def _build(self) -> None:
+        """Crawl the site, build the index, and persist it."""
+
         try:
             pages = list(self.crawler.crawl())
         except CrawlError as exc:
@@ -96,6 +101,8 @@ class SearchShell:
         print(f"Built index for {len(pages)} page(s) at {self.index_store.path}.")
 
     def _load(self) -> None:
+        """Load the compiled index into the current shell session."""
+
         try:
             self.index = self.index_store.load()
         except FileNotFoundError as exc:
@@ -104,6 +111,8 @@ class SearchShell:
         print(f"Loaded index from {self.index_store.path}.")
 
     def _print(self, word: str) -> None:
+        """Print one inverted-index entry."""
+
         if not word:
             print("Usage: print <word>")
             return
@@ -113,6 +122,8 @@ class SearchShell:
         print(self.index.format_index_entry(word))
 
     def _find(self, query: str) -> None:
+        """Run a ranked search and print formatted results."""
+
         try:
             ranker, query = parse_ranker_option(query)
         except ValueError as exc:
@@ -132,6 +143,8 @@ class SearchShell:
         print(format_results(results, query, self.index, ranker=ranker))
 
     def _explain(self, query: str) -> None:
+        """Print ranking contribution details for matching pages."""
+
         try:
             ranker, query = parse_ranker_option(query)
         except ValueError as exc:
@@ -151,6 +164,8 @@ class SearchShell:
         print(format_explanations(explanations, query))
 
     def _benchmark(self, include_bm25_grid: bool = False) -> None:
+        """Print local timing evidence for lookup, search, explain, and rankers."""
+
         start = time.perf_counter()
         if not self._ensure_index_loaded():
             print("No index loaded. Run 'build' or 'load' first.")
@@ -158,8 +173,9 @@ class SearchShell:
         load_ms = (time.perf_counter() - start) * 1000
 
         timings: dict[str, float] = {}
-        result_sets = {}
+        result_sets: dict[str, list[SearchResult]] = {}
 
+        # Measure local algorithm work only; live crawling delay is a requirement.
         lookup_start = time.perf_counter()
         self.index.format_index_entry("good")
         timings["word_lookup_ms"] = (time.perf_counter() - lookup_start) * 1000
@@ -191,7 +207,12 @@ class SearchShell:
         if include_bm25_grid:
             self._print_bm25_parameter_grid()
 
-    def _print_ranking_comparison(self, result_sets) -> None:
+    def _print_ranking_comparison(
+        self,
+        result_sets: dict[str, list[SearchResult]],
+    ) -> None:
+        """Print top-result evidence for TF-IDF and BM25."""
+
         print("Ranking comparison:")
         for ranker in ("tfidf", "bm25"):
             results = result_sets.get(ranker, [])
@@ -202,6 +223,8 @@ class SearchShell:
             print(f"- {ranker}_top={top.url} score={top.score:.4f}")
 
     def _print_bm25_parameter_grid(self) -> None:
+        """Print a small BM25 parameter comparison grid."""
+
         terms = BENCHMARK_QUERY.split()
         candidates = self.index.find(BENCHMARK_QUERY, ranker="frequency")
 
@@ -232,6 +255,8 @@ class SearchShell:
             )
 
     def _ensure_index_loaded(self) -> bool:
+        """Load the index on demand if it is not already in memory."""
+
         if self.index:
             return True
         try:
@@ -242,6 +267,8 @@ class SearchShell:
 
 
 def help_text() -> str:
+    """Return help text for the interactive shell."""
+
     return "\n".join(
         [
             "Commands:",
@@ -260,6 +287,8 @@ def help_text() -> str:
 
 
 def parse_ranker_option(command_text: str) -> tuple[str, str]:
+    """Parse an optional --ranker argument from a command body."""
+
     parts = command_text.split()
     if parts and parts[0] == "--ranker":
         if len(parts) < 3:
@@ -269,6 +298,8 @@ def parse_ranker_option(command_text: str) -> tuple[str, str]:
 
 
 def main(argv: Iterable[str] | None = None) -> int:
+    """Run one-shot commands from argv or start the interactive shell."""
+
     args = list(sys.argv[1:] if argv is None else argv)
     shell = SearchShell()
 

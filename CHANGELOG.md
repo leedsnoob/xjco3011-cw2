@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.0.4 - Release Quality Hardening
+
+### Added
+
+- Engineering practices documentation covering environment files, structure, type hints, docstrings, CI, and releases.
+- `.env` and `.env.*` ignore rules while allowing a future `.env.example`.
+- Docstrings for remaining source classes and helpers.
+- Small explanatory comments for non-obvious search and benchmark decisions.
+
+### Changed
+
+- Cleaned up a redundant import and split long expressions for readability.
+
 ## v1.0.0 - Coursework Submission
 
 Planned final release for COMP/XJCO3011 Coursework 2.

@@ -153,5 +153,6 @@ See [docs/TECHNICAL_DESIGN.md](docs/TECHNICAL_DESIGN.md) for the detailed archit
 - Search algorithms and complexity: [docs/SEARCH_ALGORITHMS.md](docs/SEARCH_ALGORITHMS.md)
 - Benchmarks: [docs/BENCHMARKS.md](docs/BENCHMARKS.md)
 - Development workflow: [docs/DEVELOPMENT_WORKFLOW.md](docs/DEVELOPMENT_WORKFLOW.md)
+- Engineering practices: [docs/ENGINEERING_PRACTICES.md](docs/ENGINEERING_PRACTICES.md)
 - Evidence matrix: [docs/EVIDENCE_MATRIX.md](docs/EVIDENCE_MATRIX.md)
 - Assignment brief: [docs/cw2.md](docs/cw2.md)

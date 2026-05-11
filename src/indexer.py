@@ -14,16 +14,22 @@ WORD_RE = re.compile(r"[A-Za-z0-9]+(?:'[A-Za-z0-9]+)?")
 
 
 class Posting(TypedDict):
+    """Statistics stored for one term on one page."""
+
     frequency: int
     positions: list[int]
 
 
 class PageInfo(TypedDict):
+    """Metadata stored for one indexed page."""
+
     title: str
     word_count: int
 
 
 class Metadata(TypedDict):
+    """Top-level metadata stored alongside the inverted index."""
+
     base_url: str
     built_at: str
     page_count: int
@@ -31,6 +37,8 @@ class Metadata(TypedDict):
 
 
 class SerializableIndex(TypedDict):
+    """JSON-serializable payload written to disk."""
+
     metadata: Metadata
     pages: dict[str, PageInfo]
     index: dict[str, dict[str, Posting]]
@@ -45,7 +53,9 @@ class PageDocument:
     text: str
 
     @classmethod
-    def from_crawled_page(cls, page: CrawledPage) -> "PageDocument":
+    def from_crawled_page(cls: type["PageDocument"], page: CrawledPage) -> "PageDocument":
+        """Create an indexable document from crawler output."""
+
         return cls(url=page.url, title=page.title, text=page.text)
 
 
