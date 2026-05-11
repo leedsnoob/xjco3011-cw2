@@ -113,7 +113,11 @@ class SearchShell:
         print(self.index.format_index_entry(word))
 
     def _find(self, query: str) -> None:
-        ranker, query = parse_ranker_option(query)
+        try:
+            ranker, query = parse_ranker_option(query)
+        except ValueError as exc:
+            print(str(exc))
+            return
         if not query:
             print("Usage: find <query terms>")
             return
@@ -128,7 +132,11 @@ class SearchShell:
         print(format_results(results, query, self.index, ranker=ranker))
 
     def _explain(self, query: str) -> None:
-        ranker, query = parse_ranker_option(query)
+        try:
+            ranker, query = parse_ranker_option(query)
+        except ValueError as exc:
+            print(str(exc))
+            return
         if not query:
             print("Usage: explain <query terms>")
             return
@@ -175,6 +183,10 @@ class SearchShell:
         candidates = self.index.find(BENCHMARK_QUERY, ranker="frequency")
 
         print("BM25 parameter comparison:")
+        if not candidates:
+            print(f"- No benchmark candidates for '{BENCHMARK_QUERY}'.")
+            return
+
         for k1, b in BM25_PARAMETER_GRID:
             score_start = time.perf_counter()
             scored = [
@@ -226,7 +238,9 @@ def help_text() -> str:
 
 def parse_ranker_option(command_text: str) -> tuple[str, str]:
     parts = command_text.split()
-    if len(parts) >= 3 and parts[0] == "--ranker":
+    if parts and parts[0] == "--ranker":
+        if len(parts) < 3:
+            raise ValueError("Usage: --ranker <frequency|tfidf|bm25> <query terms>")
         return parts[1], " ".join(parts[2:])
     return "tfidf", command_text
 
