@@ -15,6 +15,7 @@ TDD is shown as a repeated workflow, not a single isolated commit.
 | BM25 parameter comparison | `a8f9f51 test: cover coverage gaps and bm25 parameter comparison` | `a89b4dd feat: add bm25 parameter benchmark comparison` | `python3 -m src.main benchmark --bm25-grid` |
 | Remaining edge coverage | `6bf8d73 test: cover interactive and malformed crawler edges` | Existing production behavior verified by new tests | 100% line and branch coverage report |
 | Extreme input hardening | `0b105cc test: cover malformed queries and empty benchmark grid` | `b99450f fix: handle malformed queries and empty benchmark candidates` | malformed ranker, unmatched quote, empty benchmark grid tests |
+| Algorithm comparison evidence | `9e040da test: require algorithm comparison benchmark evidence` | `15d7efc feat: compare ranking algorithms in benchmark output` | `tfidf_top`, `bm25_top`, and per-function timings |
 
 The key video command is:
 
@@ -66,6 +67,7 @@ The implementation optimizes the query path rather than the crawler wait time. T
 | BM25 optional ranking | Adds term saturation and length normalization | `SearchIndex.bm25_contribution` |
 | Explain command | Makes ranking transparent and auditable | `python3 -m src.main explain good friends` |
 | Benchmark command | Measures local query and ranking costs | `python3 -m src.main benchmark --bm25-grid` |
+| Ranking comparison | Compares TF-IDF and BM25 top results directly | `Ranking comparison:` benchmark output |
 
 ## BM25 Parameter Evidence
 

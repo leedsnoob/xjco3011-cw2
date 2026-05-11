@@ -17,10 +17,15 @@ Measured on the local generated `data/index.json`:
 Benchmark results:
 - pages=10
 - terms=850
-- load_ms=1.439
-- tfidf_query_ms=0.019
+- load_ms=1.661
+- word_lookup_ms=0.010
+- tfidf_query_ms=0.020
 - bm25_query_ms=0.011
-- phrase_query_ms=0.010
+- phrase_query_ms=0.011
+- explain_ms=0.016
+Ranking comparison:
+- tfidf_top=https://quotes.toscrape.com/page/2/ score=22.7502
+- bm25_top=https://quotes.toscrape.com/page/2/ score=5.9317
 BM25 parameter comparison:
 - k1=0.9 b=0.4 top=https://quotes.toscrape.com/page/2/ score=5.7377 time_ms=0.005
 - k1=1.2 b=0.75 top=https://quotes.toscrape.com/page/2/ score=5.9317 time_ms=0.004
@@ -28,6 +33,18 @@ BM25 parameter comparison:
 ```
 
 Exact timings vary by machine, but the command provides reproducible evidence for comparing query processing paths.
+
+## Function Benchmark Matrix
+
+| Function | Benchmark metric | Complexity | Optimization evidence |
+|---|---:|---|---|
+| Word lookup / `print good` | `word_lookup_ms` | `O(postings(term))` | Direct inverted-index lookup; no full document scan |
+| TF-IDF multi-term search | `tfidf_query_ms` | `O(sum postings + candidate_pages * query_terms)` | Intersects posting lists before scoring candidates |
+| BM25 multi-term search | `bm25_query_ms` | `O(sum postings + candidate_pages * query_terms)` | Reuses candidates and stored document lengths |
+| Exact phrase search | `phrase_query_ms` | `O(sum postings + candidate_pages * positions_checked)` | Uses stored token positions instead of re-tokenizing text |
+| Explainable ranking | `explain_ms` | `O(search + result_count * query_terms)` | Reuses ranker contribution calculations |
+
+The benchmark also prints a direct TF-IDF versus BM25 top-result comparison. This is separate from the BM25 parameter grid: the ranking comparison compares two ranking algorithms, while the grid compares BM25 parameter settings.
 
 ## Complexity Summary
 
@@ -37,6 +54,7 @@ Exact timings vary by machine, but the command provides reproducible evidence fo
 - Phrase query: `O(candidate_pages * positions_checked)`.
 - TF-IDF scoring: `O(candidate_pages * query_terms)`.
 - BM25 scoring: `O(candidate_pages * query_terms)`.
+- Explain command: `O(search + result_count * query_terms)`.
 - Query suggestions: `O(vocabulary_size)`.
 
 ## Optimization Choices

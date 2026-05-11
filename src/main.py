@@ -158,6 +158,12 @@ class SearchShell:
         load_ms = (time.perf_counter() - start) * 1000
 
         timings: dict[str, float] = {}
+        result_sets = {}
+
+        lookup_start = time.perf_counter()
+        self.index.format_index_entry("good")
+        timings["word_lookup_ms"] = (time.perf_counter() - lookup_start) * 1000
+
         queries = {
             "tfidf_query_ms": (BENCHMARK_QUERY, "tfidf"),
             "bm25_query_ms": (BENCHMARK_QUERY, "bm25"),
@@ -165,8 +171,14 @@ class SearchShell:
         }
         for label, (query, ranker) in queries.items():
             query_start = time.perf_counter()
-            self.index.find(query, ranker=ranker)
+            results = self.index.find(query, ranker=ranker)
             timings[label] = (time.perf_counter() - query_start) * 1000
+            if query == BENCHMARK_QUERY:
+                result_sets[ranker] = results
+
+        explain_start = time.perf_counter()
+        self.index.explain(BENCHMARK_QUERY, ranker="bm25")
+        timings["explain_ms"] = (time.perf_counter() - explain_start) * 1000
 
         print("Benchmark results:")
         print(f"- pages={self.index.metadata['page_count']}")
@@ -174,9 +186,20 @@ class SearchShell:
         print(f"- load_ms={load_ms:.3f}")
         for label, elapsed in timings.items():
             print(f"- {label}={elapsed:.3f}")
+        self._print_ranking_comparison(result_sets)
 
         if include_bm25_grid:
             self._print_bm25_parameter_grid()
+
+    def _print_ranking_comparison(self, result_sets) -> None:
+        print("Ranking comparison:")
+        for ranker in ("tfidf", "bm25"):
+            results = result_sets.get(ranker, [])
+            if not results:
+                print(f"- {ranker}_top=none")
+                continue
+            top = results[0]
+            print(f"- {ranker}_top={top.url} score={top.score:.4f}")
 
     def _print_bm25_parameter_grid(self) -> None:
         terms = BENCHMARK_QUERY.split()
