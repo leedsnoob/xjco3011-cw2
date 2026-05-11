@@ -141,3 +141,15 @@ def test_importing_cli_does_not_emit_environment_warning() -> None:
     )
 
     assert "NotOpenSSLWarning" not in result.stderr
+
+
+def test_cli_one_shot_unknown_command_does_not_traceback() -> None:
+    result = subprocess.run(
+        [sys.executable, "-m", "src.main", "not-a-command"],
+        capture_output=True,
+        check=True,
+        text=True,
+    )
+
+    assert "Unknown command" in result.stdout
+    assert "Traceback" not in result.stderr

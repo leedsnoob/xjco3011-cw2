@@ -108,6 +108,14 @@ def test_search_supports_phrase_query_with_positions() -> None:
     ]
 
 
+def test_non_adjacent_phrase_query_returns_no_pages() -> None:
+    from src.search import SearchIndex
+
+    search_index = SearchIndex.from_dict(sample_index())
+
+    assert search_index.find('"good books friends"') == []
+
+
 def test_search_handles_empty_and_missing_queries() -> None:
     from src.search import SearchIndex
 

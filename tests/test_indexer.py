@@ -44,3 +44,20 @@ def test_build_search_index_records_frequency_and_positions() -> None:
         "https://quotes.toscrape.com/"
     ] == 4
     assert search_index["pages"]["https://quotes.toscrape.com/"]["title"] == "First"
+
+
+def test_build_search_index_handles_empty_page_text() -> None:
+    from src.indexer import PageDocument, build_search_index
+
+    search_index = build_search_index(
+        [PageDocument(url="https://quotes.toscrape.com/empty", title="Empty", text="")]
+    )
+
+    assert search_index["index"] == {}
+    assert search_index["pages"]["https://quotes.toscrape.com/empty"] == {
+        "title": "Empty",
+        "word_count": 0,
+    }
+    assert search_index["metadata"]["document_lengths"][
+        "https://quotes.toscrape.com/empty"
+    ] == 0
