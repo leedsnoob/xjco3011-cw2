@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.5 - README Documentation Polish
+
+### Changed
+
+- Reworked `README.md` into an open-source-style project entrypoint with badges, quick start, command reference, architecture, index format, ranking notes, performance summary, testing/CI evidence, troubleshooting, limitations, and coursework evidence links.
+- Clarified academic-use and environment-file expectations without adding unnecessary project configuration.
+
 ## v1.0.4 - Release Quality Hardening
 
 ### Added
