@@ -24,6 +24,13 @@ Use `python3 -m pytest` rather than plain `pytest` if multiple Python environmen
 
 The project uses `pyproject.toml` to configure pytest and coverage. The coverage gate is set to 90%, while the current suite is expected to remain above that threshold.
 
+Current local result:
+
+```text
+44 passed
+Total coverage: 100.00%
+```
+
 ## Coverage Areas
 
 The test suite covers:
@@ -32,6 +39,7 @@ The test suite covers:
 - text extraction from quote pages;
 - 6-second politeness delay using a fake sleep function;
 - HTTP failure wrapping;
+- malformed quote HTML without text or author fields;
 - token lowercasing and punctuation handling;
 - frequency and position statistics;
 - multi-page inverted indexing;
@@ -44,6 +52,7 @@ The test suite covers:
 - missing word handling;
 - typo suggestions;
 - CLI `load`, `print`, `find`, `help`, unknown command, and `exit`.
+- CLI `explain`, `benchmark`, invalid ranker, missing index, EOF, and interactive loop handling.
 
 ## Mocking Strategy
 
@@ -74,6 +83,19 @@ The GitHub Actions workflow in `.github/workflows/tests.yml` runs on `main`, fea
 - `python -m compileall src tests`.
 
 The workflow runs on Python 3.9 and 3.12 to show that the code works across the expected supported range.
+
+## Coverage Rationale
+
+The coverage gate remains 90% because CI gates should prevent regressions without encouraging artificial tests. The current suite reaches 100% locally because the remaining uncovered branches were real edge cases:
+
+- malformed quote blocks missing `.text` or `.author`;
+- interactive shell EOF;
+- interactive shell command loop before exit;
+- missing index handling for `print`, `explain`, and `benchmark`;
+- invalid ranker handling for both `find` and `explain`;
+- no-result formatting for `explain`.
+
+The `if __name__ == "__main__"` entry-point guard is excluded from coverage because it only delegates to the tested `main()` function.
 
 ## Manual Verification for Video
 

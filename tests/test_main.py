@@ -209,3 +209,129 @@ def test_cli_benchmark_command_reports_timings(tmp_path, capsys) -> None:
     assert "load_ms=" in output
     assert "tfidf_query_ms=" in output
     assert "bm25_query_ms=" in output
+
+
+def test_cli_benchmark_can_compare_bm25_parameter_grid(tmp_path, capsys) -> None:
+    from src.main import SearchShell
+    from src.search import IndexStore, SearchIndex
+
+    index_path = tmp_path / "index.json"
+    IndexStore(index_path).save(SearchIndex.from_dict(sample_index()))
+
+    shell = SearchShell(index_path=index_path)
+
+    assert shell.execute("benchmark --bm25-grid") is True
+
+    output = capsys.readouterr().out
+
+    assert "BM25 parameter comparison" in output
+    assert "k1=0.9 b=0.4" in output
+    assert "k1=1.2 b=0.75" in output
+    assert "k1=1.5 b=0.9" in output
+
+
+def test_missing_index_paths_do_not_traceback(tmp_path, capsys) -> None:
+    from src.main import SearchShell
+
+    shell = SearchShell(index_path=tmp_path / "missing.json")
+
+    assert shell.execute("print good") is True
+    assert shell.execute("explain good") is True
+    assert shell.execute("benchmark") is True
+
+    output = capsys.readouterr().out
+
+    assert output.count("No index loaded") == 3
+
+
+def test_invalid_ranker_options_report_user_error(tmp_path, capsys) -> None:
+    from src.main import SearchShell
+    from src.search import IndexStore, SearchIndex
+
+    index_path = tmp_path / "index.json"
+    IndexStore(index_path).save(SearchIndex.from_dict(sample_index()))
+
+    shell = SearchShell(index_path=index_path)
+
+    assert shell.execute("find --ranker bad good") is True
+    assert shell.execute("explain --ranker bad good") is True
+
+    output = capsys.readouterr().out
+
+    assert output.count("Unknown ranker: bad") == 2
+
+
+def test_explain_handles_usage_and_no_results(tmp_path, capsys) -> None:
+    from src.main import SearchShell
+    from src.search import IndexStore, SearchIndex
+
+    index_path = tmp_path / "index.json"
+    IndexStore(index_path).save(SearchIndex.from_dict(sample_index()))
+
+    shell = SearchShell(index_path=index_path)
+
+    assert shell.execute("explain") is True
+    assert shell.execute("explain zzzz") is True
+
+    output = capsys.readouterr().out
+
+    assert "Usage: explain <query terms>" in output
+    assert "No pages found." in output
+
+
+def test_interactive_run_handles_eof(monkeypatch, capsys) -> None:
+    from src.main import SearchShell
+
+    shell = SearchShell()
+    monkeypatch.setattr("builtins.input", lambda prompt: (_ for _ in ()).throw(EOFError))
+
+    shell.run()
+
+    output = capsys.readouterr().out
+
+    assert "XJCO3011 search shell" in output
+    assert "Goodbye." in output
+
+
+def test_interactive_run_exits_on_exit_command(monkeypatch, capsys) -> None:
+    from src.main import SearchShell
+
+    shell = SearchShell()
+    monkeypatch.setattr("builtins.input", lambda prompt: "exit")
+
+    shell.run()
+
+    output = capsys.readouterr().out
+
+    assert "XJCO3011 search shell" in output
+    assert "Goodbye." in output
+
+
+def test_interactive_run_continues_until_exit(monkeypatch, capsys) -> None:
+    from src.main import SearchShell
+
+    commands = iter(["help", "exit"])
+    shell = SearchShell()
+    monkeypatch.setattr("builtins.input", lambda prompt: next(commands))
+
+    shell.run()
+
+    output = capsys.readouterr().out
+
+    assert "Commands:" in output
+    assert "Goodbye." in output
+
+
+def test_main_without_args_runs_shell(monkeypatch) -> None:
+    from src import main as main_module
+
+    calls: list[str] = []
+
+    class FakeShell:
+        def run(self) -> None:
+            calls.append("run")
+
+    monkeypatch.setattr(main_module, "SearchShell", FakeShell)
+
+    assert main_module.main([]) == 0
+    assert calls == ["run"]

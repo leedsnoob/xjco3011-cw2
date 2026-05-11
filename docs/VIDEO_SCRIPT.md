@@ -14,7 +14,7 @@ python3 -m src.main find indifference
 python3 -m src.main find --ranker tfidf good friends
 python3 -m src.main find --ranker bm25 good friends
 python3 -m src.main explain good friends
-python3 -m src.main benchmark
+python3 -m src.main benchmark --bm25-grid
 python3 -m src.main find
 python3 -m src.main find freinds
 ```
@@ -29,7 +29,7 @@ Say:
 - Typo suggestions are an extra feature.
 - TF-IDF is the default advanced ranking model; BM25 is available as a modern keyword-ranking option.
 - `explain` shows why a result is ranked by exposing term contribution details.
-- `benchmark` reports local search timings.
+- `benchmark --bm25-grid` reports local search timings and compares three BM25 parameter settings.
 
 ## 2:00-3:30 Code Walkthrough
 
@@ -45,6 +45,7 @@ Say:
 - The index maps each word to URLs and stores frequency plus positions.
 - TF-IDF and BM25 are computed from the crawled corpus; no training data is required.
 - BM25 uses default `k1=1.2` and `b=0.75` because there are no labelled relevance judgments for tuning.
+- The benchmark compares nearby BM25 settings to show ranking stability, but does not pretend to train a model.
 - Positions enable exact phrase search.
 - JSON is chosen because it is easy to inspect and submit.
 
@@ -60,6 +61,7 @@ Say:
 
 - Tests mock HTTP and sleep, so crawler behavior is tested without waiting.
 - Tests cover crawler, indexer, search, persistence, CLI, edge cases, TF-IDF, BM25, explain, and benchmark behavior.
+- The current local suite has 44 tests and 100% coverage.
 - The CI workflow runs tests and a coverage gate automatically.
 
 ## 4:00-4:30 Version Control
@@ -67,13 +69,14 @@ Say:
 Run:
 
 ```bash
-git log --oneline --max-count=12
+git log --oneline --graph --decorate --all --max-count=30
 ```
 
 Say:
 
 - The history shows planning, tests, implementation, docs, and generated index as separate increments.
 - Feature branches show workflow evidence: workflow docs, test quality gates, advanced ranking, and release preparation.
+- `docs/EVIDENCE_MATRIX.md` maps rubric points to exact commits, tests, and commands.
 
 ## 4:30-5:00 GenAI Critical Evaluation
 

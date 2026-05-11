@@ -82,6 +82,7 @@ find "good friends"
 explain good friends
 explain --ranker bm25 good friends
 benchmark
+benchmark --bm25-grid
 find freinds
 help
 exit
@@ -97,6 +98,7 @@ python3 -m src.main find --ranker tfidf good friends
 python3 -m src.main find --ranker bm25 good friends
 python3 -m src.main explain good friends
 python3 -m src.main benchmark
+python3 -m src.main benchmark --bm25-grid
 ```
 
 `print` and `find` automatically load `data/index.json` if it already exists.
@@ -116,6 +118,12 @@ python3 -m pytest --cov=src --cov-report=term-missing
 ```
 
 The tests use fake HTTP sessions and fake sleep functions for crawler behavior, so they verify the politeness window without making the test suite wait 6 seconds per request.
+
+Current local verification is 44 tests with 100% coverage:
+
+```bash
+python3 -m pytest --cov=src --cov-report=term-missing
+```
 
 ## Design Summary
 
@@ -145,4 +153,5 @@ See [docs/TECHNICAL_DESIGN.md](docs/TECHNICAL_DESIGN.md) for the detailed archit
 - Search algorithms and complexity: [docs/SEARCH_ALGORITHMS.md](docs/SEARCH_ALGORITHMS.md)
 - Benchmarks: [docs/BENCHMARKS.md](docs/BENCHMARKS.md)
 - Development workflow: [docs/DEVELOPMENT_WORKFLOW.md](docs/DEVELOPMENT_WORKFLOW.md)
+- Evidence matrix: [docs/EVIDENCE_MATRIX.md](docs/EVIDENCE_MATRIX.md)
 - Assignment brief: [docs/cw2.md](docs/cw2.md)

@@ -81,6 +81,24 @@ Complexity:
 - Same candidate and scoring order as TF-IDF: `O(candidate_pages * query_terms)`.
 - Slightly higher constant cost due to the BM25 formula.
 
+### Parameter Comparison
+
+The benchmark command can compare three common BM25 settings:
+
+```bash
+python3 -m src.main benchmark --bm25-grid
+```
+
+The comparison currently checks:
+
+```text
+k1=0.9, b=0.4
+k1=1.2, b=0.75
+k1=1.5, b=0.9
+```
+
+The project keeps `k1=1.2, b=0.75` as the default because it is a standard information-retrieval baseline and the coursework does not include labelled query relevance data. The parameter comparison is therefore used as evidence of ranking stability and implementation understanding, not as a claim of supervised tuning.
+
 ## Query Suggestions
 
 For missing words, the project uses close string matching over the vocabulary. This is useful for small coursework corpora and easy to explain.
@@ -100,3 +118,15 @@ Benchmarks measure local algorithm performance:
 - BM25 scoring time.
 
 The benchmark intentionally excludes live crawling delay because the 6-second politeness window is a correctness requirement, not an algorithmic bottleneck to optimize away.
+
+## What Was Optimized
+
+A naive implementation could store only raw page text and scan every token on every query. That would make each query `O(total_tokens)`. This project instead pays the indexing cost once, then answers queries from posting lists:
+
+- Candidate retrieval uses inverted-index lookups.
+- Multi-word queries intersect URL sets before scoring.
+- Phrase queries use stored positions instead of re-tokenizing page text.
+- TF-IDF and BM25 score only candidate pages.
+- BM25 uses stored document lengths and the precomputed average document length.
+
+The result is a small but scalable design: adding pages increases index size, but common query work grows mainly with posting-list size and candidate count rather than total corpus text.

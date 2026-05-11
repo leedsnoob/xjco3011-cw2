@@ -18,6 +18,10 @@ from src.search import (
 )
 
 
+BM25_PARAMETER_GRID = [(0.9, 0.4), (1.2, 0.75), (1.5, 0.9)]
+BENCHMARK_QUERY = "good friends"
+
+
 class SearchShell:
     """Command dispatcher for interactive and one-shot CLI usage."""
 
@@ -63,7 +67,7 @@ class SearchShell:
             self._explain(rest)
             return True
         if command == "benchmark":
-            self._benchmark()
+            self._benchmark(include_bm25_grid=rest == "--bm25-grid")
             return True
 
         print(f"Unknown command: {command}. Type 'help' for available commands.")
@@ -138,7 +142,7 @@ class SearchShell:
             return
         print(format_explanations(explanations, query))
 
-    def _benchmark(self) -> None:
+    def _benchmark(self, include_bm25_grid: bool = False) -> None:
         start = time.perf_counter()
         if not self._ensure_index_loaded():
             print("No index loaded. Run 'build' or 'load' first.")
@@ -147,8 +151,8 @@ class SearchShell:
 
         timings: dict[str, float] = {}
         queries = {
-            "tfidf_query_ms": ("good friends", "tfidf"),
-            "bm25_query_ms": ("good friends", "bm25"),
+            "tfidf_query_ms": (BENCHMARK_QUERY, "tfidf"),
+            "bm25_query_ms": (BENCHMARK_QUERY, "bm25"),
             "phrase_query_ms": ('"good friends"', "tfidf"),
         }
         for label, (query, ranker) in queries.items():
@@ -162,6 +166,35 @@ class SearchShell:
         print(f"- load_ms={load_ms:.3f}")
         for label, elapsed in timings.items():
             print(f"- {label}={elapsed:.3f}")
+
+        if include_bm25_grid:
+            self._print_bm25_parameter_grid()
+
+    def _print_bm25_parameter_grid(self) -> None:
+        terms = BENCHMARK_QUERY.split()
+        candidates = self.index.find(BENCHMARK_QUERY, ranker="frequency")
+
+        print("BM25 parameter comparison:")
+        for k1, b in BM25_PARAMETER_GRID:
+            score_start = time.perf_counter()
+            scored = [
+                (
+                    result.url,
+                    self.index.bm25_score_with_parameters(
+                        result.url,
+                        terms,
+                        k1=k1,
+                        b=b,
+                    ),
+                )
+                for result in candidates
+            ]
+            elapsed = (time.perf_counter() - score_start) * 1000
+            top_url, top_score = max(scored, key=lambda item: item[1])
+            print(
+                f"- k1={k1} b={b} top={top_url} "
+                f"score={top_score:.4f} time_ms={elapsed:.3f}"
+            )
 
     def _ensure_index_loaded(self) -> bool:
         if self.index:
@@ -209,5 +242,5 @@ def main(argv: Iterable[str] | None = None) -> int:
     return 0
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     raise SystemExit(main())
