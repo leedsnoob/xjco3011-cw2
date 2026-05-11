@@ -4,7 +4,7 @@ This file maps high-band marking expectations to concrete repository evidence. I
 
 ## TDD Evidence Across the Project
 
-TDD is shown as a repeated workflow, not a single isolated commit.
+TDD is shown as a repeated workflow across several commits.
 
 | Area | Test-first evidence | Implementation evidence | Verification |
 |---|---|---|---|
@@ -16,7 +16,8 @@ TDD is shown as a repeated workflow, not a single isolated commit.
 | Remaining edge coverage | `6bf8d73 test: cover interactive and malformed crawler edges` | Existing production behavior verified by new tests | 100% line and branch coverage report |
 | Extreme input hardening | `0b105cc test: cover malformed queries and empty benchmark grid` | `b99450f fix: handle malformed queries and empty benchmark candidates` | malformed ranker, unmatched quote, empty benchmark grid tests |
 | Algorithm comparison evidence | `9e040da test: require algorithm comparison benchmark evidence` | `15d7efc feat: compare ranking algorithms in benchmark output` | `tfidf_top`, `bm25_top`, and per-function timings |
-| Release-quality hardening | current branch | docstrings, type hints, `.env` ignore rules, engineering practice notes | `python3 -m compileall src tests` |
+| Release-quality hardening | `feature/release-quality-hardening` | docstrings, type hints, `.env` ignore rules, engineering practice notes | `python3 -m compileall src tests` |
+| Documentation tone review | `feature/documentation-tone-review` | English-only project docs, direct wording, Safari/Chrome practice comparison, source links | markdown wording scan and local link check |
 
 The key video command is:
 
@@ -40,7 +41,7 @@ The suite uses unit, integration-style CLI, persistence, and mocked crawler test
 | Index tokenization, frequency, positions | `tests/test_indexer.py` |
 | Save/load round trip | `tests/test_search.py` |
 | TF-IDF, BM25, exact phrase, suggestions | `tests/test_search.py` |
-| CLI errors without traceback | `tests/test_main.py` |
+| CLI errors with friendly messages | `tests/test_main.py` |
 | Interactive shell EOF and exit behavior | `tests/test_main.py` |
 | Malformed `--ranker` usage | `tests/test_main.py` |
 | Unmatched quote query handling | `tests/test_main.py`, `tests/test_search.py` |
@@ -56,12 +57,12 @@ Total coverage: 100.00%
 
 ## Algorithm and Optimization Evidence
 
-The implementation optimizes the query path rather than the crawler wait time. The crawler delay is a correctness requirement, so removing or parallelizing it would weaken the submission.
+The implementation optimizes the query path. The crawler delay is a correctness requirement, so removing or parallelizing it would weaken the submission.
 
 | Optimization decision | Why it matters | Evidence |
 |---|---|---|
 | Inverted index | Avoids scanning all page text for every query | `src/indexer.py`, `src/search.py` |
-| Positional postings | Enables phrase search without re-tokenizing page text | `positions` in `data/index.json` |
+| Positional postings | Enables phrase search from stored token offsets | `positions` in `data/index.json` |
 | Candidate intersection before scoring | Scores only pages containing all query terms | `SearchIndex.find` |
 | Stored document lengths | BM25 length normalization avoids rereading documents | `metadata.document_lengths` |
 | TF-IDF default ranking | Improves raw frequency by weighting rare terms | `SearchIndex.term_contribution` |
@@ -73,7 +74,7 @@ The implementation optimizes the query path rather than the crawler wait time. T
 
 ## BM25 Parameter Evidence
 
-The project compares common BM25 settings but does not claim supervised tuning because the coursework provides no labelled relevance judgments. The selected default remains the standard `k1=1.2, b=0.75`.
+The project compares common BM25 settings and makes no supervised-tuning claim because the coursework provides no labelled relevance judgments. The selected default remains the standard `k1=1.2, b=0.75`.
 
 Current local comparison:
 
@@ -84,4 +85,4 @@ BM25 parameter comparison:
 - k1=1.5 b=0.9 top=https://quotes.toscrape.com/page/2/ score=6.1639
 ```
 
-The top result is stable across these settings for `good friends`, so the implementation uses the standard default rather than overfitting parameters to one small corpus.
+The top result is stable across these settings for `good friends`, so the implementation uses the standard default and avoids overfitting parameters to one small corpus.

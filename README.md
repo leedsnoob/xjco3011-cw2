@@ -33,7 +33,7 @@ The project crawls the quote website politely, builds a case-insensitive inverte
 - Crawls all paginated quote pages from `https://quotes.toscrape.com/`.
 - Enforces a minimum 6-second delay between successive live website requests.
 - Builds a deterministic inverted index with lowercase terms, per-page frequency, token positions, document lengths, and page metadata.
-- Persists the compiled index to `data/index.json` for repeatable search without recrawling.
+- Persists the compiled index to `data/index.json` for repeatable search after a single crawl.
 - Provides the required coursework commands: `build`, `load`, `print <word>`, and `find <query>`.
 - Adds higher-band search features: TF-IDF ranking, optional BM25 ranking, exact phrase search, typo suggestions, explainable score breakdowns, and benchmark output.
 - Includes 48 automated tests with mocked HTTP responses, mocked politeness delay, CLI checks, persistence checks, edge cases, branch coverage, and a 90% CI coverage gate.
@@ -54,7 +54,7 @@ python3 -m src.main find good friends
 python3 -m src.main explain --ranker bm25 good friends
 ```
 
-`load`, `print`, `find`, `explain`, and `benchmark` use the committed `data/index.json` when it is present. Run `build` only when you want to recrawl the live site.
+`load`, `print`, `find`, `explain`, and `benchmark` use the committed `data/index.json` when it is present. Run `build` when you want to recrawl the live site.
 
 ## Installation
 
@@ -167,7 +167,7 @@ The design keeps network crawling, indexing, query processing, persistence, and 
 
 ## Index Format
 
-The saved index is JSON so it can be inspected without custom tooling. Each term maps to one or more page postings:
+The saved index is JSON so it can be inspected with ordinary text tools. Each term maps to one or more page postings:
 
 ```json
 {
@@ -186,7 +186,7 @@ The metadata section stores page count, document lengths, average document lengt
 
 TF-IDF is the default advanced ranker. It rewards pages that contain all query terms while giving more weight to rarer terms in the corpus. BM25 is available with the standard default parameters `k1=1.2` and `b=0.75`; it adds term saturation and document-length normalization.
 
-The project does not train either ranker because the coursework corpus does not provide labelled relevance judgments. Instead, it uses established information retrieval formulas and includes a small BM25 parameter comparison to show that the chosen default is deliberate rather than arbitrary.
+The rankers use established information retrieval formulas because the coursework corpus provides no labelled relevance judgments. A small BM25 parameter comparison records why the selected default is deliberate.
 
 Query behavior:
 
@@ -194,11 +194,11 @@ Query behavior:
 - Quoted queries such as `"good friends"` require adjacent token positions.
 - Misspelled or missing terms trigger suggestions from the indexed vocabulary.
 - `explain` reports term frequency, document frequency, inverse document frequency, document length, score, and contribution.
-- Malformed queries and invalid rankers return controlled messages rather than tracebacks.
+- Malformed queries and invalid rankers return controlled messages and hide tracebacks.
 
 ## Performance
 
-Benchmarking focuses on local search algorithms, not live crawling. Crawling delay is a correctness requirement, so the implementation does not parallelize live requests.
+Benchmarking measures local search algorithms. Live crawling keeps the required politeness delay, so the implementation keeps live requests sequential.
 
 ```bash
 python3 -m src.main benchmark --bm25-grid
@@ -213,7 +213,7 @@ Example benchmark areas:
 | BM25 search | `bm25_query_ms` | `O(sum postings + candidate_pages * query_terms)` |
 | Phrase search | `phrase_query_ms` | `O(sum postings + candidate_pages * positions_checked)` |
 | Explainable ranking | `explain_ms` | `O(search + result_count * query_terms)` |
-| Suggestions | not timed in the default benchmark | `O(vocabulary_size)` |
+| Suggestions | outside default timing | `O(vocabulary_size)` |
 
 Current benchmark evidence and the TF-IDF versus BM25 comparison are recorded in [docs/BENCHMARKS.md](docs/BENCHMARKS.md). The detailed algorithm discussion is in [docs/SEARCH_ALGORITHMS.md](docs/SEARCH_ALGORITHMS.md).
 
@@ -262,6 +262,7 @@ GitHub Actions runs the same checks on Python 3.9 and 3.12 with a configured cov
 |-- docs/
 |   |-- BENCHMARKS.md
 |   |-- DEVELOPMENT_WORKFLOW.md
+|   |-- DOCUMENTATION_REVIEW.md
 |   |-- ENGINEERING_PRACTICES.md
 |   |-- EVIDENCE_MATRIX.md
 |   |-- GENAI_REFLECTION.md
@@ -285,6 +286,7 @@ This repository is structured so that the main marking evidence is easy to find:
 | Technical design and trade-offs | [docs/TECHNICAL_DESIGN.md](docs/TECHNICAL_DESIGN.md) |
 | Search algorithms, complexity, and optimization | [docs/SEARCH_ALGORITHMS.md](docs/SEARCH_ALGORITHMS.md) |
 | Benchmark results and BM25 comparison | [docs/BENCHMARKS.md](docs/BENCHMARKS.md) |
+| Documentation review and tone audit | [docs/DOCUMENTATION_REVIEW.md](docs/DOCUMENTATION_REVIEW.md) |
 | Testing strategy, mocks, coverage, and CI | [docs/TESTING.md](docs/TESTING.md) |
 | Git workflow, semantic commits, branches, and release process | [docs/DEVELOPMENT_WORKFLOW.md](docs/DEVELOPMENT_WORKFLOW.md) |
 | Engineering practices, type hints, docstrings, and environment policy | [docs/ENGINEERING_PRACTICES.md](docs/ENGINEERING_PRACTICES.md) |
@@ -309,10 +311,11 @@ feature/extreme-case-hardening
 feature/algorithm-comparison-evidence
 feature/release-quality-hardening
 feature/readme-open-source-polish
+feature/documentation-tone-review
 release/v1.0.0
 ```
 
-Test-first work is documented across multiple features, not only one commit. The evidence matrix maps test commits to implementation commits and verification commands. To inspect the history:
+Test-first work is documented across multiple features. The evidence matrix maps test commits to implementation commits and verification commands. To inspect the history:
 
 ```bash
 git log --oneline --graph --decorate --all --max-count=40
@@ -327,13 +330,13 @@ git log --oneline --graph --decorate --all --max-count=40
 | `build` appears slow | This is expected because the crawler waits between live requests by design. |
 | No results for a query | Try `print <word>` to inspect a single term, or check suggestions from `find <word>`. |
 | Invalid ranker error | Use `--ranker tfidf` or `--ranker bm25`. |
-| Shell does not exit | Use `exit`, `quit`, or `Ctrl-D`. |
+| Shell keeps running | Use `exit`, `quit`, or `Ctrl-D`. |
 
 ## Limitations
 
-- The crawler targets `quotes.toscrape.com`; it is not a general-purpose web crawler.
-- The corpus is small, so BM25 parameters are compared but not trained against relevance labels.
-- The index is stored as a single JSON file for transparency rather than maximum storage efficiency.
+- The crawler targets `quotes.toscrape.com` only.
+- The corpus is small, so BM25 parameters are compared with unsupervised ranking evidence.
+- The index is stored as a single JSON file for transparency over storage efficiency.
 - Query suggestions use vocabulary distance checks, which are acceptable for this small corpus but would need a faster structure for a large index.
 
 ## Academic Use

@@ -34,7 +34,7 @@
 - Modify: `tests/test_crawler.py`
 
 - [ ] Write tests for pagination, page text extraction, politeness sleep, and request failure handling.
-- [ ] Run `pytest tests/test_crawler.py -v` and verify tests fail because crawler functions are not implemented.
+- [ ] Run `pytest tests/test_crawler.py -v` and verify tests fail because crawler functions are still pending.
 - [ ] Implement crawler behavior in Task 2.
 - [ ] Run `pytest tests/test_crawler.py -v` and verify tests pass.
 - [ ] Commit with `test: cover crawler behavior`.
@@ -57,7 +57,7 @@
 - Modify: `tests/test_indexer.py`
 
 - [ ] Write tests for token normalization, punctuation handling, word frequency, positions, and multi-page indexing.
-- [ ] Run `pytest tests/test_indexer.py -v` and verify tests fail because indexer functions are not implemented.
+- [ ] Run `pytest tests/test_indexer.py -v` and verify tests fail because indexer functions are still pending.
 - [ ] Implement indexing behavior in Task 4.
 - [ ] Run `pytest tests/test_indexer.py -v` and verify tests pass.
 - [ ] Commit with `test: cover inverted index statistics`.
@@ -78,7 +78,7 @@
 - Modify: `tests/test_search.py`
 
 - [ ] Write tests for save/load round trip, word printing, single-word search, multi-word intersection, phrase search, empty queries, absent words, and suggestions.
-- [ ] Run `pytest tests/test_search.py -v` and verify tests fail because search functions are not implemented.
+- [ ] Run `pytest tests/test_search.py -v` and verify tests fail because search functions are still pending.
 - [ ] Implement search behavior in Task 6.
 - [ ] Run `pytest tests/test_search.py -v` and verify tests pass.
 - [ ] Commit with `test: cover search and persistence behavior`.

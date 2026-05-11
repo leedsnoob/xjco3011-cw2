@@ -4,7 +4,7 @@ This document records the engineering-quality decisions used to keep the coursew
 
 ## Environment and Secrets
 
-The project does not require a `.env` file because it has no secrets, API keys, database credentials, or deployment-specific settings. Adding a real `.env` would create unnecessary configuration surface.
+The project has no `.env` file requirement because it uses no secrets, API keys, database credentials, or deployment-specific settings. Adding a real `.env` would create unnecessary configuration surface.
 
 The `.gitignore` explicitly ignores:
 
@@ -27,7 +27,7 @@ The production code is separated into focused modules:
 | `src/search.py` | Index loading, querying, ranking, suggestions, explanation formatting |
 | `src/main.py` | CLI command dispatch, user-facing messages, benchmark output |
 
-Tests mirror this structure under `tests/`, with deterministic fixtures and temporary files instead of live network dependencies.
+Tests mirror this structure under `tests/`, with deterministic fixtures and temporary files in place of live network dependencies.
 
 ## Type Hints and Docstrings
 
@@ -56,9 +56,9 @@ The CI workflow runs the test suite and compile check on Python 3.9 and 3.12. Co
 
 ## Release Practice
 
-The repository uses feature branches, merge commits, semantic commit messages, release tags, and GitHub Releases. The latest release attaches the compiled `index.json` so the index evidence is available without rebuilding.
+The repository uses feature branches, merge commits, semantic commit messages, release tags, and GitHub Releases. The latest release attaches the compiled `index.json` so the index evidence is available from release assets.
 
-The release workflow is intentionally lightweight because this is coursework rather than a deployed package, but it still demonstrates professional habits:
+The release workflow is intentionally lightweight for coursework scale and still demonstrates professional habits:
 
 - isolated feature branches;
 - incremental test-first commits;

@@ -15,7 +15,7 @@ The design is intentionally modular so each coursework concept can be demonstrat
 
 `QuoteCrawler` starts at the base URL and follows the `li.next a` pagination link until no next page remains. It uses `urljoin` so relative links such as `/page/2/` become absolute URLs.
 
-`PoliteRequester` wraps HTTP access and enforces a 6-second delay before every request after the first one. The delay, HTTP session, and timeout are injectable, which makes the behavior testable without slow live requests.
+`PoliteRequester` wraps HTTP access and enforces a 6-second delay before every request after the first one. The delay, HTTP session, and timeout are injectable, which supports fast deterministic tests.
 
 The crawler extracts:
 
@@ -25,7 +25,7 @@ The crawler extracts:
 - tags;
 - next-page URL.
 
-Network and HTTP failures are wrapped in `CrawlError` so the CLI can show a friendly error instead of a raw traceback.
+Network and HTTP failures are wrapped in `CrawlError` so the CLI can show a friendly error and hide raw tracebacks.
 
 ## Indexer
 
@@ -84,7 +84,7 @@ If a query is wrapped in double quotes in the interactive shell, exact phrase se
 
 When a term is missing, the search layer uses `difflib.get_close_matches` to offer suggestions such as `freinds -> friends`.
 
-The `explain` command exposes term-level contributions so the ranking is not a black box.
+The `explain` command exposes term-level contributions and makes ranking decisions auditable.
 
 ## CLI
 
@@ -112,8 +112,8 @@ exit
 
 ## Trade-offs
 
-- JSON persistence is not as fast as a database for large corpora, but this website is small and JSON is transparent for assessment.
+- JSON persistence prioritizes assessment transparency over large-corpus storage performance.
 - TF-IDF is used as the default because it is strong enough for a small corpus and easy to explain.
-- BM25 is available as an advanced option, but parameters are not tuned because the coursework does not provide labelled relevance judgments.
+- BM25 is available as an advanced option. Parameters use standard defaults because the coursework provides no labelled relevance judgments.
 - Exact phrase search is only activated for quoted interactive queries. Regular multi-word queries use page intersection, matching the coursework examples.
 - Tests mock network and sleep behavior. Live crawling is still supported for generating the submitted index file.
