@@ -163,6 +163,25 @@ class SearchIndex:
         denominator = tf + k1 * (1 - b + b * (doc_length / avg_length))
         return idf * ((tf * (k1 + 1)) / denominator)
 
+    def bm25_score_with_parameters(
+        self,
+        url: str,
+        terms: list[str],
+        k1: float,
+        b: float,
+    ) -> float:
+        return sum(
+            self.bm25_contribution(
+                url,
+                self.index[term][url]["frequency"],
+                self.idf(term),
+                k1=k1,
+                b=b,
+            )
+            for term in terms
+            if url in self.index.get(term, {})
+        )
+
     def document_length(self, url: str) -> int:
         return self.metadata.get("document_lengths", {}).get(
             url,
