@@ -9,7 +9,7 @@ from difflib import get_close_matches
 from pathlib import Path
 from typing import Any
 
-from src.indexer import Posting, SerializableIndex, tokenize
+from src.indexer import SerializableIndex, tokenize
 
 
 DEFAULT_INDEX_PATH = Path("data/index.json")
@@ -38,10 +38,14 @@ class SearchIndex:
         )
 
     @classmethod
-    def from_dict(cls, payload: dict[str, Any]) -> "SearchIndex":
+    def from_dict(cls: type["SearchIndex"], payload: dict[str, Any]) -> "SearchIndex":
+        """Create a searchable index from the persisted JSON-compatible shape."""
+
         return cls(payload)  # The project owns this JSON shape.
 
     def to_dict(self) -> SerializableIndex:
+        """Return the serializable index payload for JSON persistence."""
+
         return {
             "metadata": self.metadata,
             "pages": self.pages,
@@ -49,6 +53,8 @@ class SearchIndex:
         }
 
     def format_index_entry(self, word: str) -> str:
+        """Return the printable inverted-index entry for one user-supplied word."""
+
         terms = tokenize(word)
         if not terms:
             return "No word supplied."
@@ -71,11 +77,14 @@ class SearchIndex:
         return "\n".join(lines)
 
     def find(self, query: str, ranker: str = "tfidf") -> list[SearchResult]:
+        """Find pages matching all query terms and rank them with the selected ranker."""
+
         phrase_mode, terms = normalise_query(query)
         if not terms:
             return []
         validate_ranker(ranker)
 
+        # Intersect postings before scoring so ranking only touches candidate pages.
         page_sets = [set(self.index.get(term, {})) for term in terms]
         if any(not pages for pages in page_sets):
             return []
@@ -99,6 +108,8 @@ class SearchIndex:
         return sorted(results, key=lambda result: (-result.score, result.url))
 
     def explain(self, query: str, ranker: str = "tfidf") -> list[dict[str, Any]]:
+        """Return per-result ranking details for a query."""
+
         _, terms = normalise_query(query)
         results = self.find(query, ranker=ranker)
         explanations: list[dict[str, Any]] = []
@@ -121,9 +132,13 @@ class SearchIndex:
         return explanations
 
     def score(self, url: str, terms: list[str], ranker: str) -> float:
+        """Return the total ranking score for a page and query terms."""
+
         return sum(self.term_contribution(url, term, ranker)["contribution"] for term in terms)
 
     def term_contribution(self, url: str, term: str, ranker: str) -> dict[str, Any]:
+        """Return one term's contribution to a page score."""
+
         validate_ranker(ranker)
         posting = self.index[term][url]
         tf = posting["frequency"]
@@ -146,6 +161,8 @@ class SearchIndex:
         }
 
     def idf(self, term: str) -> float:
+        """Return smoothed inverse document frequency for a term."""
+
         page_count = self.metadata["page_count"]
         df = len(self.index.get(term, {}))
         return math.log((page_count + 1) / (df + 1)) + 1
@@ -158,6 +175,8 @@ class SearchIndex:
         k1: float = 1.2,
         b: float = 0.75,
     ) -> float:
+        """Return one term's BM25 contribution for a page."""
+
         doc_length = self.document_length(url)
         avg_length = self.average_document_length or 1.0
         denominator = tf + k1 * (1 - b + b * (doc_length / avg_length))
@@ -170,6 +189,8 @@ class SearchIndex:
         k1: float,
         b: float,
     ) -> float:
+        """Return a BM25 score with explicit parameters for benchmark comparison."""
+
         return sum(
             self.bm25_contribution(
                 url,
@@ -183,15 +204,21 @@ class SearchIndex:
         )
 
     def document_length(self, url: str) -> int:
+        """Return the stored document length for BM25 normalization."""
+
         return self.metadata.get("document_lengths", {}).get(
             url,
             self.pages.get(url, {}).get("word_count", 0),
         )
 
     def suggest(self, term: str) -> list[str]:
+        """Return close vocabulary matches for a missing or misspelled term."""
+
         return get_close_matches(term.lower(), self.index.keys(), n=3, cutoff=0.72)
 
     def _contains_phrase(self, url: str, terms: list[str]) -> bool:
+        """Return whether a page contains the query terms in consecutive positions."""
+
         if len(terms) <= 1:
             return bool(terms)
 
@@ -200,8 +227,12 @@ class SearchIndex:
             set(self.index[term][url]["positions"]) for term in terms[1:]
         ]
 
+        # Positions make exact phrase checks local to candidate pages.
         for start in first_positions:
-            if all(start + offset + 1 in positions for offset, positions in enumerate(later_positions)):
+            if all(
+                start + offset + 1 in positions
+                for offset, positions in enumerate(later_positions)
+            ):
                 return True
         return False
 
@@ -213,6 +244,8 @@ class IndexStore:
         self.path = Path(path)
 
     def save(self, index: SearchIndex) -> None:
+        """Write the compiled index as deterministic, inspectable JSON."""
+
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.path.write_text(
             json.dumps(index.to_dict(), indent=2, sort_keys=True),
@@ -220,6 +253,8 @@ class IndexStore:
         )
 
     def load(self) -> SearchIndex:
+        """Load the compiled index from disk."""
+
         if not self.path.exists():
             raise FileNotFoundError(f"Index file not found: {self.path}")
         return SearchIndex.from_dict(json.loads(self.path.read_text(encoding="utf-8")))
@@ -239,6 +274,8 @@ def normalise_query(query: str) -> tuple[bool, list[str]]:
 
 
 def validate_ranker(ranker: str) -> None:
+    """Raise a user-facing error for unsupported ranking algorithms."""
+
     if ranker not in {"frequency", "tfidf", "bm25"}:
         raise ValueError(f"Unknown ranker: {ranker}")
 
@@ -278,6 +315,8 @@ def format_results(
 
 
 def format_explanations(explanations: list[dict[str, Any]], query: str) -> str:
+    """Format ranking explanations for CLI output."""
+
     if not query.strip():
         return "Usage: explain <query terms>"
     if not explanations:

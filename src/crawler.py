@@ -34,6 +34,8 @@ class CrawledPage:
 
     @property
     def word_count(self) -> int:
+        """Return the approximate token count for the extracted visible text."""
+
         return len(self.text.split())
 
 
@@ -54,6 +56,8 @@ class PoliteRequester:
         self._has_requested = False
 
     def get(self, url: str) -> str:
+        """Fetch one URL while respecting the configured politeness window."""
+
         if self._has_requested:
             self.sleep(self.delay_seconds)
 
@@ -120,7 +124,11 @@ class QuoteCrawler:
             text_parts.extend(tag for tag in tags if tag)
 
         next_link = soup.select_one("li.next a")
-        next_url = urljoin(url, next_link["href"]) if next_link and next_link.has_attr("href") else None
+        next_url = (
+            urljoin(url, next_link["href"])
+            if next_link and next_link.has_attr("href")
+            else None
+        )
 
         return CrawledPage(
             url=url,
