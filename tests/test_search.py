@@ -148,7 +148,15 @@ def test_formatting_handles_missing_words_and_empty_inputs() -> None:
     assert search_index.format_index_entry("") == "No word supplied."
     assert "Suggestions" in search_index.format_index_entry("freinds")
     assert format_results([], "", search_index) == "Usage: find <query terms>"
+    assert "freinds: friends" in format_results([], "freinds", search_index)
     assert format_results([], "zzzz", search_index) == "No pages found."
+
+
+def test_format_explanations_handles_empty_and_missing_queries() -> None:
+    from src.search import format_explanations
+
+    assert format_explanations([], "") == "Usage: explain <query terms>"
+    assert format_explanations([], "zzzz") == "No pages found."
 
 
 def test_single_word_phrase_query_behaves_like_word_query() -> None:
@@ -203,6 +211,27 @@ def test_explain_returns_term_contributions_for_ranker() -> None:
     assert first["document_length"] == 5
     assert first["score"] > 0
     assert {"term", "tf", "df", "idf", "contribution"} <= set(first["terms"][0])
+
+
+def test_bm25_parameter_score_can_be_compared() -> None:
+    from src.search import SearchIndex
+
+    search_index = SearchIndex.from_dict(sample_index())
+
+    short_score = search_index.bm25_score_with_parameters(
+        "https://quotes.toscrape.com/page/2/",
+        ["good", "friends"],
+        k1=1.2,
+        b=0.75,
+    )
+    long_score = search_index.bm25_score_with_parameters(
+        "https://quotes.toscrape.com/page/3/",
+        ["good", "friends"],
+        k1=1.2,
+        b=0.75,
+    )
+
+    assert short_score > long_score
 
 
 def test_unknown_ranker_is_rejected() -> None:
