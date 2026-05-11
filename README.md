@@ -140,7 +140,7 @@ The inverted index uses this structure:
 }
 ```
 
-This directly supports the coursework requirement to store word statistics. Frequencies are used by TF-IDF and BM25 ranking; positions support exact phrase search.
+This directly supports the coursework requirement to store word statistics. Frequencies are used by TF-IDF and BM25 ranking; positions support exact phrase search. The benchmark command reports per-function timing for word lookup, TF-IDF search, BM25 search, phrase search, and explainable ranking, and compares the TF-IDF and BM25 top-ranked result.
 
 See [docs/TECHNICAL_DESIGN.md](docs/TECHNICAL_DESIGN.md) for the detailed architecture and trade-offs.
 

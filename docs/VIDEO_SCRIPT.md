@@ -30,6 +30,7 @@ Say:
 - TF-IDF is the default advanced ranking model; BM25 is available as a modern keyword-ranking option.
 - `explain` shows why a result is ranked by exposing term contribution details.
 - `benchmark --bm25-grid` reports local search timings and compares three BM25 parameter settings.
+- The benchmark also compares TF-IDF and BM25 top results and reports timing for word lookup, TF-IDF search, BM25 search, phrase search, and explain.
 
 ## 2:00-3:30 Code Walkthrough
 
@@ -46,6 +47,7 @@ Say:
 - TF-IDF and BM25 are computed from the crawled corpus; no training data is required.
 - BM25 uses default `k1=1.2` and `b=0.75` because there are no labelled relevance judgments for tuning.
 - The benchmark compares nearby BM25 settings to show ranking stability, but does not pretend to train a model.
+- The complexity evidence covers four tested search functions: word lookup, TF-IDF search, BM25 search, and phrase search.
 - Positions enable exact phrase search.
 - JSON is chosen because it is easy to inspect and submit.
 

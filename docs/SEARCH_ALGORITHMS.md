@@ -112,12 +112,35 @@ Complexity:
 Benchmarks measure local algorithm performance:
 
 - index load time;
-- query time;
+- word lookup time;
+- TF-IDF query time;
+- BM25 query time;
 - phrase query time;
+- explain command time;
 - TF-IDF scoring time;
 - BM25 scoring time.
 
 The benchmark intentionally excludes live crawling delay because the 6-second politeness window is a correctness requirement, not an algorithmic bottleneck to optimize away.
+
+## Four Search Functions: Tests, Complexity, and Optimization
+
+| Function | Test evidence | Time complexity | Optimization |
+|---|---|---|---|
+| `print <word>` lookup | `test_format_index_entry_prints_frequency_and_positions`, `test_load_print_and_find_commands_use_persisted_index` | `O(postings(term))` | Uses direct dictionary lookup into the inverted index |
+| TF-IDF ranked `find` | `test_tfidf_ranker_is_available_as_default`, `test_cli_benchmark_command_reports_timings` | `O(sum postings + candidate_pages * query_terms)` | Intersects candidate pages before scoring |
+| BM25 ranked `find --ranker bm25` | `test_bm25_penalises_very_long_documents`, `test_cli_find_accepts_ranker_option` | `O(sum postings + candidate_pages * query_terms)` | Reuses candidates and stored document lengths for normalization |
+| Exact phrase search | `test_search_supports_phrase_query_with_positions`, `test_non_adjacent_phrase_query_returns_no_pages` | `O(sum postings + candidate_pages * positions_checked)` | Uses stored positions instead of scanning raw page text |
+
+The benchmark command also measures `explain`, which has complexity `O(search + result_count * query_terms)` because it performs the ranking search and then reports each term contribution for each returned result.
+
+## TF-IDF vs BM25 Comparison
+
+The two ranking algorithms are compared in two ways:
+
+- Timing: `tfidf_query_ms` and `bm25_query_ms` are printed by `python3 -m src.main benchmark`.
+- Ranking result: the same command prints `tfidf_top=...` and `bm25_top=...`, so the video can show whether the algorithms agree or diverge on the top result.
+
+TF-IDF is simpler and easier to explain: it rewards terms that are frequent in a document but less common across the corpus. BM25 is more advanced because it adds term-frequency saturation and document-length normalization. The implementation keeps both because TF-IDF is transparent while BM25 demonstrates a modern ranking method.
 
 ## What Was Optimized
 
