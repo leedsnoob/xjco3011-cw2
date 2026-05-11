@@ -61,7 +61,7 @@ Say:
 
 - Tests mock HTTP and sleep, so crawler behavior is tested without waiting.
 - Tests cover crawler, indexer, search, persistence, CLI, edge cases, TF-IDF, BM25, explain, and benchmark behavior.
-- The current local suite has 44 tests and 100% coverage.
+- The current local suite has 48 tests and 100% coverage.
 - The CI workflow runs tests and a coverage gate automatically.
 
 ## 4:00-4:30 Version Control

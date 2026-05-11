@@ -119,7 +119,7 @@ python3 -m pytest --cov=src --cov-report=term-missing
 
 The tests use fake HTTP sessions and fake sleep functions for crawler behavior, so they verify the politeness window without making the test suite wait 6 seconds per request.
 
-Current local verification is 44 tests with 100% coverage:
+Current local verification is 48 tests with 100% coverage:
 
 ```bash
 python3 -m pytest --cov=src --cov-report=term-missing

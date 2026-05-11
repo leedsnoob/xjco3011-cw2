@@ -27,7 +27,7 @@ The project uses `pyproject.toml` to configure pytest and coverage. The coverage
 Current local result:
 
 ```text
-44 passed
+48 passed
 Total coverage: 100.00%
 ```
 
@@ -94,6 +94,9 @@ The coverage gate remains 90% because CI gates should prevent regressions withou
 - missing index handling for `print`, `explain`, and `benchmark`;
 - invalid ranker handling for both `find` and `explain`;
 - no-result formatting for `explain`.
+- malformed `--ranker` usage with no query;
+- unmatched quote handling for phrase queries;
+- empty-index benchmark grid handling.
 
 The `if __name__ == "__main__"` entry-point guard is excluded from coverage because it only delegates to the tested `main()` function.
 
