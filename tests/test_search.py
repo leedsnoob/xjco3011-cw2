@@ -116,3 +116,27 @@ def test_search_handles_empty_and_missing_queries() -> None:
     assert search_index.find("") == []
     assert search_index.find("unicorn") == []
     assert search_index.suggest("freinds") == ["friends"]
+
+
+def test_formatting_handles_missing_words_and_empty_inputs() -> None:
+    from src.search import SearchIndex, format_results
+
+    search_index = SearchIndex.from_dict(sample_index())
+
+    assert search_index.format_index_entry("") == "No word supplied."
+    assert "Suggestions" in search_index.format_index_entry("freinds")
+    assert format_results([], "", search_index) == "Usage: find <query terms>"
+    assert format_results([], "zzzz", search_index) == "No pages found."
+
+
+def test_single_word_phrase_query_behaves_like_word_query() -> None:
+    from src.search import SearchIndex
+
+    search_index = SearchIndex.from_dict(sample_index())
+
+    results = search_index.find('"good"')
+
+    assert [result.url for result in results] == [
+        "https://quotes.toscrape.com/page/2/",
+        "https://quotes.toscrape.com/",
+    ]

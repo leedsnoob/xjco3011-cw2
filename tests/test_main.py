@@ -8,6 +8,20 @@ import sys
 from tests.test_search import sample_index
 
 
+class FakeCrawler:
+    def crawl(self):
+        from src.crawler import CrawledPage
+
+        return [
+            CrawledPage(
+                url="https://quotes.toscrape.com/",
+                title="Quotes",
+                text="Good friends are good.",
+                next_url=None,
+            )
+        ]
+
+
 def test_load_print_and_find_commands_use_persisted_index(tmp_path, capsys) -> None:
     from src.main import SearchShell
     from src.search import IndexStore, SearchIndex
@@ -26,6 +40,53 @@ def test_load_print_and_find_commands_use_persisted_index(tmp_path, capsys) -> N
     assert "Loaded index" in output
     assert "frequency=2" in output
     assert "https://quotes.toscrape.com/page/2/" in output
+
+
+def test_build_command_saves_index_from_crawler(tmp_path, capsys) -> None:
+    from src.main import SearchShell
+
+    index_path = tmp_path / "index.json"
+    shell = SearchShell(index_path=index_path, crawler=FakeCrawler())
+
+    assert shell.execute("build") is True
+
+    output = capsys.readouterr().out
+
+    assert "Built index for 1 page(s)" in output
+    assert index_path.exists()
+
+
+def test_help_blank_print_usage_and_missing_load(tmp_path, capsys) -> None:
+    from src.main import SearchShell, main
+
+    shell = SearchShell(index_path=tmp_path / "missing.json")
+
+    assert shell.execute("") is True
+    assert shell.execute("help") is True
+    assert shell.execute("print") is True
+    assert shell.execute("load") is True
+    assert main(["help"]) == 0
+
+    output = capsys.readouterr().out
+
+    assert "Commands:" in output
+    assert "Usage: print <word>" in output
+    assert "Index file not found" in output
+
+
+def test_build_command_reports_crawl_error(tmp_path, capsys) -> None:
+    from src.crawler import CrawlError
+    from src.main import SearchShell
+
+    class BrokenCrawler:
+        def crawl(self):
+            raise CrawlError("network unavailable")
+
+    shell = SearchShell(index_path=tmp_path / "index.json", crawler=BrokenCrawler())
+
+    assert shell.execute("build") is True
+
+    assert "network unavailable" in capsys.readouterr().out
 
 
 def test_find_requires_query_and_loaded_index(tmp_path, capsys) -> None:
