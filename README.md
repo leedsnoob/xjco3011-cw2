@@ -16,7 +16,7 @@ The tool crawls the quote website, observes a 6-second politeness window between
   - page metadata and document lengths.
 - Saves and loads the compiled index as JSON.
 - Supports required commands: `build`, `load`, `print`, and `find`.
-- Supports multi-word queries, ranked results, exact phrase search, and typo suggestions.
+- Supports multi-word queries, TF-IDF/BM25 ranked results, exact phrase search, typo suggestions, explainable ranking, and benchmark output.
 - Includes tests for crawler, indexer, search, persistence, and CLI behavior.
 
 ## Project Structure
@@ -76,7 +76,12 @@ find good friends
 Additional examples:
 
 ```text
+find --ranker tfidf good friends
+find --ranker bm25 good friends
 find "good friends"
+explain good friends
+explain --ranker bm25 good friends
+benchmark
 find freinds
 help
 exit
@@ -88,7 +93,10 @@ One-shot command mode is also supported:
 python3 -m src.main build
 python3 -m src.main load
 python3 -m src.main print nonsense
-python3 -m src.main find good friends
+python3 -m src.main find --ranker tfidf good friends
+python3 -m src.main find --ranker bm25 good friends
+python3 -m src.main explain good friends
+python3 -m src.main benchmark
 ```
 
 `print` and `find` automatically load `data/index.json` if it already exists.
@@ -124,7 +132,7 @@ The inverted index uses this structure:
 }
 ```
 
-This directly supports the coursework requirement to store word statistics. Frequencies are used for ranking; positions support exact phrase search.
+This directly supports the coursework requirement to store word statistics. Frequencies are used by TF-IDF and BM25 ranking; positions support exact phrase search.
 
 See [docs/TECHNICAL_DESIGN.md](docs/TECHNICAL_DESIGN.md) for the detailed architecture and trade-offs.
 
@@ -134,4 +142,7 @@ See [docs/TECHNICAL_DESIGN.md](docs/TECHNICAL_DESIGN.md) for the detailed archit
 - Testing strategy: [docs/TESTING.md](docs/TESTING.md)
 - Video script: [docs/VIDEO_SCRIPT.md](docs/VIDEO_SCRIPT.md)
 - GenAI reflection notes: [docs/GENAI_REFLECTION.md](docs/GENAI_REFLECTION.md)
+- Search algorithms and complexity: [docs/SEARCH_ALGORITHMS.md](docs/SEARCH_ALGORITHMS.md)
+- Benchmarks: [docs/BENCHMARKS.md](docs/BENCHMARKS.md)
+- Development workflow: [docs/DEVELOPMENT_WORKFLOW.md](docs/DEVELOPMENT_WORKFLOW.md)
 - Assignment brief: [docs/cw2.md](docs/cw2.md)

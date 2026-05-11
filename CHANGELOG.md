@@ -13,9 +13,10 @@ Planned final release for COMP/XJCO3011 Coursework 2.
 - Multi-word search, phrase search, and typo suggestions.
 - Professional workflow documentation, testing evidence, and GenAI reflection.
 
-### Planned Before Tag
+### Advanced Evidence
 
 - Automated CI workflow and coverage gate.
-- TF-IDF and BM25 ranking.
-- Explainable ranking output.
+- TF-IDF ranking as the default advanced ranking model.
+- BM25 ranking with standard default parameters.
+- Explainable ranking output with term-level contributions.
 - Local benchmark command and benchmark documentation.

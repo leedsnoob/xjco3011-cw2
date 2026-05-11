@@ -72,15 +72,19 @@ JSON was chosen because it is inspectable during marking and easy to explain in 
 
 `find` normalizes query terms with the same tokenizer used during indexing. Multi-word search intersects the page sets for all terms, so `find good friends` returns only pages containing both `good` and `friends`.
 
-Results are ranked by combined term frequency. This is simple, deterministic, and directly explainable:
+Results are ranked by TF-IDF by default. TF-IDF weights terms by local frequency and corpus rarity:
 
 ```text
-score = frequency(term1 in page) + frequency(term2 in page) + ...
+score = sum(tf(term, page) * idf(term))
 ```
+
+The CLI also supports BM25 with `--ranker bm25`. BM25 adds term-frequency saturation and document-length normalization using standard default parameters `k1=1.2` and `b=0.75`.
 
 If a query is wrapped in double quotes in the interactive shell, exact phrase search checks adjacent token positions.
 
 When a term is missing, the search layer uses `difflib.get_close_matches` to offer suggestions such as `freinds -> friends`.
+
+The `explain` command exposes term-level contributions so the ranking is not a black box.
 
 ## CLI
 
@@ -109,6 +113,7 @@ exit
 ## Trade-offs
 
 - JSON persistence is not as fast as a database for large corpora, but this website is small and JSON is transparent for assessment.
-- Frequency ranking is simpler than full TF-IDF. It is enough to demonstrate ranked retrieval while keeping the code explainable.
+- TF-IDF is used as the default because it is strong enough for a small corpus and easy to explain.
+- BM25 is available as an advanced option, but parameters are not tuned because the coursework does not provide labelled relevance judgments.
 - Exact phrase search is only activated for quoted interactive queries. Regular multi-word queries use page intersection, matching the coursework examples.
 - Tests mock network and sleep behavior. Live crawling is still supported for generating the submitted index file.
