@@ -2,41 +2,68 @@
 
 Python command-line search engine for `https://quotes.toscrape.com/`.
 
+The tool crawls the quote website, observes a 6-second politeness window between live requests, builds a case-insensitive inverted index with frequency and position statistics, saves the compiled index to disk, and supports searching from a command-line shell.
+
+## Features
+
+- Crawls paginated quote pages from `https://quotes.toscrape.com/`.
+- Uses `requests` for HTTP and `BeautifulSoup` for HTML parsing.
+- Enforces a minimum 6-second delay between successive live requests.
+- Builds an inverted index with:
+  - lowercase terms;
+  - per-page frequency;
+  - per-page token positions;
+  - page metadata and document lengths.
+- Saves and loads the compiled index as JSON.
+- Supports required commands: `build`, `load`, `print`, and `find`.
+- Supports multi-word queries, ranked results, exact phrase search, and typo suggestions.
+- Includes tests for crawler, indexer, search, persistence, and CLI behavior.
+
 ## Project Structure
 
 ```text
 src/
-  crawler.py
-  indexer.py
-  search.py
-  main.py
+  crawler.py       # polite crawler and HTML parser
+  indexer.py       # tokenizer and inverted index builder
+  search.py        # persisted index, lookup, ranking, suggestions
+  main.py          # interactive shell and one-shot CLI commands
 tests/
+  fixtures.py
   test_crawler.py
   test_indexer.py
   test_search.py
+  test_main.py
 data/
-  .gitkeep
+  index.json       # generated compiled index after build
 docs/
-  cw2.md
-  XJCO3011_Coursework2_Brief__2025_2026.pdf
+  TECHNICAL_DESIGN.md
+  TESTING.md
+  VIDEO_SCRIPT.md
+  GENAI_REFLECTION.md
 requirements.txt
 ```
 
 ## Setup
 
+Use Python 3.9 or later.
+
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 ```
 
-## Planned Usage
+If you do not use a virtual environment, run commands with `python3 -m ...` so tests use the same Python environment that has the dependencies installed.
+
+## Usage
+
+Start the interactive shell:
 
 ```bash
-python -m src.main
+python3 -m src.main
 ```
 
-Required commands:
+Required coursework commands inside the shell:
 
 ```text
 build
@@ -46,13 +73,65 @@ find indifference
 find good friends
 ```
 
-## Testing
+Additional examples:
 
-```bash
-pytest
-pytest --cov=src
+```text
+find "good friends"
+find freinds
+help
+exit
 ```
 
-## Notes
+One-shot command mode is also supported:
 
-The implementation should respect a politeness window of at least 6 seconds between live requests, build a case-insensitive inverted index, and store word statistics such as frequency and positions.
+```bash
+python3 -m src.main build
+python3 -m src.main load
+python3 -m src.main print nonsense
+python3 -m src.main find good friends
+```
+
+`print` and `find` automatically load `data/index.json` if it already exists.
+
+## Testing
+
+Run the full test suite:
+
+```bash
+python3 -m pytest -q
+```
+
+Run with coverage:
+
+```bash
+python3 -m pytest --cov=src --cov-report=term-missing
+```
+
+The tests use fake HTTP sessions and fake sleep functions for crawler behavior, so they verify the politeness window without making the test suite wait 6 seconds per request.
+
+## Design Summary
+
+The inverted index uses this structure:
+
+```python
+{
+    "good": {
+        "https://quotes.toscrape.com/page/2/": {
+            "frequency": 2,
+            "positions": [0, 3],
+        }
+    }
+}
+```
+
+This directly supports the coursework requirement to store word statistics. Frequencies are used for ranking; positions support exact phrase search.
+
+See [docs/TECHNICAL_DESIGN.md](docs/TECHNICAL_DESIGN.md) for the detailed architecture and trade-offs.
+
+## Coursework Evidence
+
+- Technical design: [docs/TECHNICAL_DESIGN.md](docs/TECHNICAL_DESIGN.md)
+- Testing strategy: [docs/TESTING.md](docs/TESTING.md)
+- Video script: [docs/VIDEO_SCRIPT.md](docs/VIDEO_SCRIPT.md)
+- GenAI reflection notes: [docs/GENAI_REFLECTION.md](docs/GENAI_REFLECTION.md)
+- Assignment brief: [docs/cw2.md](docs/cw2.md)
