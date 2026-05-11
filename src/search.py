@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 from dataclasses import dataclass
 from difflib import get_close_matches
 from pathlib import Path
@@ -20,7 +21,7 @@ class SearchResult:
 
     url: str
     title: str
-    score: int
+    score: float
     matched_terms: list[str]
 
 
@@ -31,6 +32,10 @@ class SearchIndex:
         self.metadata = payload["metadata"]
         self.pages = payload["pages"]
         self.index = payload["index"]
+        lengths = self.metadata.get("document_lengths", {})
+        self.average_document_length = (
+            sum(lengths.values()) / len(lengths) if lengths else 0.0
+        )
 
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> "SearchIndex":
@@ -65,10 +70,11 @@ class SearchIndex:
             )
         return "\n".join(lines)
 
-    def find(self, query: str) -> list[SearchResult]:
+    def find(self, query: str, ranker: str = "tfidf") -> list[SearchResult]:
         phrase_mode, terms = normalise_query(query)
         if not terms:
             return []
+        validate_ranker(ranker)
 
         page_sets = [set(self.index.get(term, {})) for term in terms]
         if any(not pages for pages in page_sets):
@@ -84,13 +90,84 @@ class SearchIndex:
             SearchResult(
                 url=url,
                 title=self.pages.get(url, {}).get("title", url),
-                score=sum(self.index[term][url]["frequency"] for term in terms),
+                score=self.score(url, terms, ranker),
                 matched_terms=terms,
             )
             for url in candidate_urls
         ]
 
         return sorted(results, key=lambda result: (-result.score, result.url))
+
+    def explain(self, query: str, ranker: str = "tfidf") -> list[dict[str, Any]]:
+        _, terms = normalise_query(query)
+        results = self.find(query, ranker=ranker)
+        explanations: list[dict[str, Any]] = []
+
+        for result in results:
+            term_details = [
+                self.term_contribution(result.url, term, ranker) for term in terms
+            ]
+            explanations.append(
+                {
+                    "ranker": ranker,
+                    "url": result.url,
+                    "title": result.title,
+                    "score": result.score,
+                    "document_length": self.document_length(result.url),
+                    "average_document_length": self.average_document_length,
+                    "terms": term_details,
+                }
+            )
+        return explanations
+
+    def score(self, url: str, terms: list[str], ranker: str) -> float:
+        return sum(self.term_contribution(url, term, ranker)["contribution"] for term in terms)
+
+    def term_contribution(self, url: str, term: str, ranker: str) -> dict[str, Any]:
+        validate_ranker(ranker)
+        posting = self.index[term][url]
+        tf = posting["frequency"]
+        df = len(self.index[term])
+        idf = self.idf(term)
+
+        if ranker == "frequency":
+            contribution = float(tf)
+        elif ranker == "tfidf":
+            contribution = tf * idf
+        else:
+            contribution = self.bm25_contribution(url, tf, idf)
+
+        return {
+            "term": term,
+            "tf": tf,
+            "df": df,
+            "idf": idf,
+            "contribution": contribution,
+        }
+
+    def idf(self, term: str) -> float:
+        page_count = self.metadata["page_count"]
+        df = len(self.index.get(term, {}))
+        return math.log((page_count + 1) / (df + 1)) + 1
+
+    def bm25_contribution(
+        self,
+        url: str,
+        tf: int,
+        idf: float,
+        k1: float = 1.2,
+        b: float = 0.75,
+    ) -> float:
+        doc_length = self.document_length(url)
+        avg_length = self.average_document_length or 1.0
+        denominator = tf + k1 * (1 - b + b * (doc_length / avg_length))
+        return idf * ((tf * (k1 + 1)) / denominator)
+
+    def document_length(self, url: str) -> int:
+        return self.metadata.get("document_lengths", {}).get(
+            url,
+            self.pages.get(url, {}).get("word_count", 0),
+        )
 
     def suggest(self, term: str) -> list[str]:
         return get_close_matches(term.lower(), self.index.keys(), n=3, cutoff=0.72)
@@ -139,7 +216,17 @@ def normalise_query(query: str) -> tuple[bool, list[str]]:
     return phrase_mode, tokenize(stripped)
 
 
-def format_results(results: list[SearchResult], query: str, index: SearchIndex) -> str:
+def validate_ranker(ranker: str) -> None:
+    if ranker not in {"frequency", "tfidf", "bm25"}:
+        raise ValueError(f"Unknown ranker: {ranker}")
+
+
+def format_results(
+    results: list[SearchResult],
+    query: str,
+    index: SearchIndex,
+    ranker: str = "tfidf",
+) -> str:
     """Format search results for CLI output."""
 
     if not query.strip():
@@ -159,10 +246,32 @@ def format_results(results: list[SearchResult], query: str, index: SearchIndex) 
             return f"No pages found. Suggestions: {hint}"
         return "No pages found."
 
-    lines = [f"Found {len(results)} page(s) for '{query.strip()}':"]
+    lines = [f"Found {len(results)} page(s) for '{query.strip()}' using {ranker}:"]
     for result in results:
         lines.append(
             f"- {result.url} ({result.title}) "
-            f"score={result.score}, terms={', '.join(result.matched_terms)}"
+            f"score={result.score:.4f}, terms={', '.join(result.matched_terms)}"
         )
+    return "\n".join(lines)
+
+
+def format_explanations(explanations: list[dict[str, Any]], query: str) -> str:
+    if not query.strip():
+        return "Usage: explain <query terms>"
+    if not explanations:
+        return "No pages found."
+
+    lines: list[str] = [f"Explanation for '{query.strip()}':"]
+    for explanation in explanations:
+        lines.append(
+            f"- {explanation['url']} ({explanation['title']}) "
+            f"ranker={explanation['ranker']} score={explanation['score']:.4f} "
+            f"document_length={explanation['document_length']} "
+            f"average_document_length={explanation['average_document_length']:.2f}"
+        )
+        for term in explanation["terms"]:
+            lines.append(
+                f"  {term['term']}: tf={term['tf']} df={term['df']} "
+                f"idf={term['idf']:.4f} contribution={term['contribution']:.4f}"
+            )
     return "\n".join(lines)
