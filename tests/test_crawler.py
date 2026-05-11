@@ -47,6 +47,25 @@ def test_parse_page_keeps_title_quotes_authors_and_tags() -> None:
     assert page.word_count > 20
 
 
+def test_parse_page_tolerates_quotes_without_text_or_author() -> None:
+    from src.crawler import QuoteCrawler
+
+    html = """
+    <html>
+      <head><title>Partial quotes</title></head>
+      <body>
+        <div class="quote"><a class="tag">orphan-tag</a></div>
+      </body>
+    </html>
+    """
+
+    page = QuoteCrawler().parse_page("https://quotes.toscrape.com/", html)
+
+    assert page.title == "Partial quotes"
+    assert "orphan-tag" in page.text
+    assert page.next_url is None
+
+
 def test_crawler_wraps_request_failures_in_crawl_error() -> None:
     from src.crawler import CrawlError, QuoteCrawler
 

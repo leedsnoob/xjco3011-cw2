@@ -293,6 +293,35 @@ def test_interactive_run_handles_eof(monkeypatch, capsys) -> None:
     assert "Goodbye." in output
 
 
+def test_interactive_run_exits_on_exit_command(monkeypatch, capsys) -> None:
+    from src.main import SearchShell
+
+    shell = SearchShell()
+    monkeypatch.setattr("builtins.input", lambda prompt: "exit")
+
+    shell.run()
+
+    output = capsys.readouterr().out
+
+    assert "XJCO3011 search shell" in output
+    assert "Goodbye." in output
+
+
+def test_interactive_run_continues_until_exit(monkeypatch, capsys) -> None:
+    from src.main import SearchShell
+
+    commands = iter(["help", "exit"])
+    shell = SearchShell()
+    monkeypatch.setattr("builtins.input", lambda prompt: next(commands))
+
+    shell.run()
+
+    output = capsys.readouterr().out
+
+    assert "Commands:" in output
+    assert "Goodbye." in output
+
+
 def test_main_without_args_runs_shell(monkeypatch) -> None:
     from src import main as main_module
 
