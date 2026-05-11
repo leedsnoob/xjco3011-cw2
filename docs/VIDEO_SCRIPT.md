@@ -11,7 +11,10 @@ python3 -m src.main build
 python3 -m src.main load
 python3 -m src.main print nonsense
 python3 -m src.main find indifference
-python3 -m src.main find good friends
+python3 -m src.main find --ranker tfidf good friends
+python3 -m src.main find --ranker bm25 good friends
+python3 -m src.main explain good friends
+python3 -m src.main benchmark
 python3 -m src.main find
 python3 -m src.main find freinds
 ```
@@ -24,6 +27,9 @@ Say:
 - `find` supports single-word and multi-word queries.
 - Empty and missing queries produce friendly messages.
 - Typo suggestions are an extra feature.
+- TF-IDF is the default advanced ranking model; BM25 is available as a modern keyword-ranking option.
+- `explain` shows why a result is ranked by exposing term contribution details.
+- `benchmark` reports local search timings.
 
 ## 2:00-3:30 Code Walkthrough
 
@@ -31,13 +37,14 @@ Open:
 
 - `src/crawler.py`: `QuoteCrawler`, `PoliteRequester`, pagination, injected sleep.
 - `src/indexer.py`: `tokenize`, `build_inverted_index`, frequency and positions.
-- `src/search.py`: JSON persistence, multi-word intersection, ranking, phrase search, suggestions.
+- `src/search.py`: JSON persistence, multi-word intersection, TF-IDF/BM25 ranking, phrase search, suggestions, explain output.
 - `src/main.py`: shell command dispatch.
 
 Say:
 
 - The index maps each word to URLs and stores frequency plus positions.
-- Frequency ranking is simple and explainable.
+- TF-IDF and BM25 are computed from the crawled corpus; no training data is required.
+- BM25 uses default `k1=1.2` and `b=0.75` because there are no labelled relevance judgments for tuning.
 - Positions enable exact phrase search.
 - JSON is chosen because it is easy to inspect and submit.
 
@@ -52,7 +59,8 @@ python3 -m pytest --cov=src --cov-report=term-missing
 Say:
 
 - Tests mock HTTP and sleep, so crawler behavior is tested without waiting.
-- Tests cover crawler, indexer, search, persistence, CLI, and edge cases.
+- Tests cover crawler, indexer, search, persistence, CLI, edge cases, TF-IDF, BM25, explain, and benchmark behavior.
+- The CI workflow runs tests and a coverage gate automatically.
 
 ## 4:00-4:30 Version Control
 
@@ -65,6 +73,7 @@ git log --oneline --max-count=12
 Say:
 
 - The history shows planning, tests, implementation, docs, and generated index as separate increments.
+- Feature branches show workflow evidence: workflow docs, test quality gates, advanced ranking, and release preparation.
 
 ## 4:30-5:00 GenAI Critical Evaluation
 
@@ -72,5 +81,5 @@ Summarize:
 
 - AI helped structure the project, design the inverted index, and draft tests.
 - A key correction was making the index store frequency and positions rather than only page lists.
-- Another issue was the Python environment mismatch between `pytest` and `python3 -m pytest`; it was diagnosed and documented.
-- AI accelerated boilerplate, but every behavior was verified with tests and manual commands.
+- AI suggestions were treated as drafts: ranking, environment, and edge-case behavior were checked with TDD, coverage, and manual CLI runs.
+- Ethical reflection: AI use must be declared, and I remain responsible for understanding and verifying all submitted code.
