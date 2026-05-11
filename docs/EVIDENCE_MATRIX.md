@@ -14,6 +14,7 @@ TDD is shown as a repeated workflow, not a single isolated commit.
 | TF-IDF, BM25, explain, benchmark | `23bcd9d test: cover tf-idf bm25 explain and benchmark` | `c2fa7a2 feat: add explainable tf-idf and bm25 ranking` | `python3 -m src.main explain good friends` |
 | BM25 parameter comparison | `a8f9f51 test: cover coverage gaps and bm25 parameter comparison` | `a89b4dd feat: add bm25 parameter benchmark comparison` | `python3 -m src.main benchmark --bm25-grid` |
 | Remaining edge coverage | `6bf8d73 test: cover interactive and malformed crawler edges` | Existing production behavior verified by new tests | 100% line and branch coverage report |
+| Extreme input hardening | `0b105cc test: cover malformed queries and empty benchmark grid` | `b99450f fix: handle malformed queries and empty benchmark candidates` | malformed ranker, unmatched quote, empty benchmark grid tests |
 
 The key video command is:
 
@@ -39,12 +40,15 @@ The suite uses unit, integration-style CLI, persistence, and mocked crawler test
 | TF-IDF, BM25, exact phrase, suggestions | `tests/test_search.py` |
 | CLI errors without traceback | `tests/test_main.py` |
 | Interactive shell EOF and exit behavior | `tests/test_main.py` |
+| Malformed `--ranker` usage | `tests/test_main.py` |
+| Unmatched quote query handling | `tests/test_main.py`, `tests/test_search.py` |
+| Empty-index benchmark grid handling | `tests/test_main.py` |
 | CI coverage gate | `.github/workflows/tests.yml`, `pyproject.toml` |
 
 Current local verification:
 
 ```text
-44 passed
+48 passed
 Total coverage: 100.00%
 ```
 

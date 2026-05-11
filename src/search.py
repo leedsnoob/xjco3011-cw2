@@ -229,6 +229,9 @@ def normalise_query(query: str) -> tuple[bool, list[str]]:
     """Return whether query is a phrase and its normalized tokens."""
 
     stripped = query.strip()
+    if stripped.count('"') == 1:
+        raise ValueError("Malformed query: unmatched quote")
+
     phrase_mode = len(stripped) >= 2 and stripped[0] == '"' and stripped[-1] == '"'
     if phrase_mode:
         stripped = stripped[1:-1]
