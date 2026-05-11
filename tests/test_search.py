@@ -12,6 +12,7 @@ def sample_index() -> dict:
             "document_lengths": {
                 "https://quotes.toscrape.com/": 6,
                 "https://quotes.toscrape.com/page/2/": 5,
+                "https://quotes.toscrape.com/page/3/": 120,
             },
         },
         "pages": {
@@ -22,6 +23,10 @@ def sample_index() -> dict:
             "https://quotes.toscrape.com/page/2/": {
                 "title": "Second",
                 "word_count": 5,
+            },
+            "https://quotes.toscrape.com/page/3/": {
+                "title": "Long",
+                "word_count": 120,
             },
         },
         "index": {
@@ -34,11 +39,19 @@ def sample_index() -> dict:
                     "frequency": 2,
                     "positions": [0, 3],
                 },
+                "https://quotes.toscrape.com/page/3/": {
+                    "frequency": 10,
+                    "positions": [0, 10, 20, 30, 40, 50, 60, 70, 80, 90],
+                },
             },
             "friends": {
                 "https://quotes.toscrape.com/page/2/": {
                     "frequency": 1,
                     "positions": [1],
+                },
+                "https://quotes.toscrape.com/page/3/": {
+                    "frequency": 1,
+                    "positions": [100],
                 },
             },
             "books": {
@@ -87,12 +100,13 @@ def test_search_returns_ranked_multi_word_results() -> None:
 
     search_index = SearchIndex.from_dict(sample_index())
 
-    results = search_index.find("good friends")
+    results = search_index.find("good friends", ranker="frequency")
 
     assert [result.url for result in results] == [
+        "https://quotes.toscrape.com/page/3/",
         "https://quotes.toscrape.com/page/2/"
     ]
-    assert results[0].score == 3
+    assert results[0].score == 11
     assert results[0].matched_terms == ["good", "friends"]
 
 
@@ -145,6 +159,57 @@ def test_single_word_phrase_query_behaves_like_word_query() -> None:
     results = search_index.find('"good"')
 
     assert [result.url for result in results] == [
+        "https://quotes.toscrape.com/page/3/",
         "https://quotes.toscrape.com/page/2/",
         "https://quotes.toscrape.com/",
     ]
+
+
+def test_tfidf_ranker_is_available_as_default() -> None:
+    from src.search import SearchIndex
+
+    search_index = SearchIndex.from_dict(sample_index())
+
+    explicit = search_index.find("good friends", ranker="tfidf")
+    default = search_index.find("good friends")
+
+    assert [result.url for result in default] == [result.url for result in explicit]
+    assert all(isinstance(result.score, float) for result in default)
+
+
+def test_bm25_penalises_very_long_documents() -> None:
+    from src.search import SearchIndex
+
+    search_index = SearchIndex.from_dict(sample_index())
+
+    results = search_index.find("good friends", ranker="bm25")
+
+    assert [result.url for result in results] == [
+        "https://quotes.toscrape.com/page/2/",
+        "https://quotes.toscrape.com/page/3/",
+    ]
+
+
+def test_explain_returns_term_contributions_for_ranker() -> None:
+    from src.search import SearchIndex
+
+    search_index = SearchIndex.from_dict(sample_index())
+
+    explanations = search_index.explain("good friends", ranker="bm25")
+
+    first = explanations[0]
+    assert first["ranker"] == "bm25"
+    assert first["url"] == "https://quotes.toscrape.com/page/2/"
+    assert first["document_length"] == 5
+    assert first["score"] > 0
+    assert {"term", "tf", "df", "idf", "contribution"} <= set(first["terms"][0])
+
+
+def test_unknown_ranker_is_rejected() -> None:
+    import pytest
+    from src.search import SearchIndex
+
+    search_index = SearchIndex.from_dict(sample_index())
+
+    with pytest.raises(ValueError, match="Unknown ranker"):
+        search_index.find("good", ranker="not-real")

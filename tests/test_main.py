@@ -153,3 +153,59 @@ def test_cli_one_shot_unknown_command_does_not_traceback() -> None:
 
     assert "Unknown command" in result.stdout
     assert "Traceback" not in result.stderr
+
+
+def test_cli_explain_command_outputs_term_contributions(tmp_path, capsys) -> None:
+    from src.main import SearchShell
+    from src.search import IndexStore, SearchIndex
+
+    index_path = tmp_path / "index.json"
+    IndexStore(index_path).save(SearchIndex.from_dict(sample_index()))
+
+    shell = SearchShell(index_path=index_path)
+
+    assert shell.execute("explain --ranker bm25 good friends") is True
+
+    output = capsys.readouterr().out
+
+    assert "ranker=bm25" in output
+    assert "tf=" in output
+    assert "df=" in output
+    assert "idf=" in output
+    assert "contribution=" in output
+
+
+def test_cli_find_accepts_ranker_option(tmp_path, capsys) -> None:
+    from src.main import SearchShell
+    from src.search import IndexStore, SearchIndex
+
+    index_path = tmp_path / "index.json"
+    IndexStore(index_path).save(SearchIndex.from_dict(sample_index()))
+
+    shell = SearchShell(index_path=index_path)
+
+    assert shell.execute("find --ranker bm25 good friends") is True
+
+    output = capsys.readouterr().out
+
+    assert "Found" in output
+    assert "score=" in output
+
+
+def test_cli_benchmark_command_reports_timings(tmp_path, capsys) -> None:
+    from src.main import SearchShell
+    from src.search import IndexStore, SearchIndex
+
+    index_path = tmp_path / "index.json"
+    IndexStore(index_path).save(SearchIndex.from_dict(sample_index()))
+
+    shell = SearchShell(index_path=index_path)
+
+    assert shell.execute("benchmark") is True
+
+    output = capsys.readouterr().out
+
+    assert "Benchmark results" in output
+    assert "load_ms=" in output
+    assert "tfidf_query_ms=" in output
+    assert "bm25_query_ms=" in output
