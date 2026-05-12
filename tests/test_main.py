@@ -236,6 +236,34 @@ def test_cli_benchmark_can_compare_bm25_parameter_grid(tmp_path, capsys) -> None
     assert "k1=1.5 b=0.9" in output
 
 
+def test_cli_benchmark_can_run_synthetic_stress_test(capsys) -> None:
+    from src.main import SearchShell
+
+    shell = SearchShell()
+
+    assert shell.execute("benchmark --stress") is True
+
+    output = capsys.readouterr().out
+
+    assert "Synthetic stress benchmark:" in output
+    assert "| pages | terms | index_kb | candidates | build_ms |" in output
+    assert "| 100 |" in output
+    assert "| 500 |" in output
+    assert "| 1000 |" in output
+
+
+def test_cli_benchmark_reports_unknown_option(capsys) -> None:
+    from src.main import SearchShell
+
+    shell = SearchShell()
+
+    assert shell.execute("benchmark --unknown") is True
+
+    output = capsys.readouterr().out
+
+    assert "Usage: benchmark [--bm25-grid|--stress]" in output
+
+
 def test_missing_index_paths_do_not_traceback(tmp_path, capsys) -> None:
     from src.main import SearchShell
 
