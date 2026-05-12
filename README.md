@@ -66,9 +66,12 @@ python3 -m venv .venv
 source .venv/bin/activate
 python3 -m pip install --upgrade pip
 python3 -m pip install -r requirements.txt
+python3 -c "import bs4, requests; print(bs4.__version__, requests.__version__)"
 ```
 
 No `.env` file is required. The application has no secrets and no external API keys. Environment files are ignored by `.gitignore` so local settings cannot be committed accidentally.
+
+Use `python3 -m pip` from the same interpreter that runs the project. IDEs and terminal shells can point at different Python environments; a package installed in one environment may still be missing in another.
 
 ## Usage
 
@@ -120,12 +123,13 @@ python3 -m src.main benchmark --stress
 ```
 
 `build` performs live HTTP requests and intentionally waits between requests to satisfy the politeness requirement. The other commands load the saved index and run locally.
+The CLI prints progress bars for crawl, load, search, explanation, benchmark, and stress benchmark phases so long-running work is visible in the terminal.
 
 ## Command Reference
 
 | Command | Purpose | Example |
 |---|---|---|
-| `build` | Crawl the website and write `data/index.json` | `python3 -m src.main build` |
+| `build` | Crawl the website with progress output and write `data/index.json` | `python3 -m src.main build` |
 | `load` | Load the saved index and print a summary | `python3 -m src.main load` |
 | `print <word>` | Show indexed pages and frequencies for one word | `python3 -m src.main print nonsense` |
 | `find <query>` | Search pages containing all query terms | `python3 -m src.main find good friends` |
@@ -234,7 +238,7 @@ python3 -m compileall src tests
 Current local verification:
 
 ```text
-48 passed
+55 passed
 Total coverage: 100.00%
 ```
 
@@ -276,7 +280,8 @@ GitHub Actions runs the same checks on Python 3.9 and 3.12 with a configured cov
 |   |-- SEARCH_ALGORITHMS.md
 |   |-- TECHNICAL_DESIGN.md
 |   |-- TESTING.md
-|   `-- VIDEO_SCRIPT.md
+|   |-- VIDEO_SCRIPT.md
+|   `-- superpowers/    # planning/specification evidence
 |-- .github/workflows/tests.yml
 |-- CHANGELOG.md
 |-- pyproject.toml
@@ -297,6 +302,7 @@ This repository is structured so that the main marking evidence is easy to find:
 | GenAI evidence log | [docs/GENAI_EVIDENCE_LOG.md](docs/GENAI_EVIDENCE_LOG.md) |
 | Testing strategy, mocks, coverage, and CI | [docs/TESTING.md](docs/TESTING.md) |
 | Git workflow, semantic commits, branches, and release process | [docs/DEVELOPMENT_WORKFLOW.md](docs/DEVELOPMENT_WORKFLOW.md) |
+| Planning and implementation-plan evidence | [docs/superpowers/specs/2026-05-11-search-engine-design.md](docs/superpowers/specs/2026-05-11-search-engine-design.md), [docs/superpowers/plans/2026-05-11-search-engine-implementation.md](docs/superpowers/plans/2026-05-11-search-engine-implementation.md) |
 | Engineering practices, type hints, docstrings, and environment policy | [docs/ENGINEERING_PRACTICES.md](docs/ENGINEERING_PRACTICES.md) |
 | GenAI use, verification responsibility, ethics, and learning impact | [docs/GENAI_REFLECTION.md](docs/GENAI_REFLECTION.md) |
 | Marker-facing evidence checklist | [docs/EVIDENCE_MATRIX.md](docs/EVIDENCE_MATRIX.md) |
@@ -334,8 +340,8 @@ git log --oneline --graph --decorate --all --max-count=40
 | Problem | Resolution |
 |---|---|
 | `No saved index found` | Run `python3 -m src.main build`, or confirm `data/index.json` exists. |
-| `ModuleNotFoundError` | Activate the virtual environment and run `python3 -m pip install -r requirements.txt`. |
-| `build` appears slow | This is expected because the crawler waits between live requests by design. |
+| `ModuleNotFoundError: No module named 'bs4'` | Run `python3 -m pip install -r requirements.txt` in the same Python environment used to run `python3 -m src.main`. The package name is `beautifulsoup4`, and the import name is `bs4`. |
+| `build` appears slow | This is expected because the crawler waits at least 6 seconds between live requests. The target site has multiple pages, so a fresh live build can take close to a minute; progress bars show each fetched page. |
 | No results for a query | Try `print <word>` to inspect a single term, or check suggestions from `find <word>`. |
 | Invalid ranker error | Use `--ranker tfidf` or `--ranker bm25`. |
 | Shell keeps running | Use `exit`, `quit`, or `Ctrl-D`. |
