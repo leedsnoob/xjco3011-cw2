@@ -303,6 +303,27 @@ def test_missing_index_paths_do_not_traceback(tmp_path, capsys) -> None:
     assert output.count("No index loaded") == 3
 
 
+def test_invalid_index_json_reports_user_error(tmp_path, capsys) -> None:
+    import pytest
+    from src.main import SearchShell
+
+    index_path = tmp_path / "index.json"
+    index_path.write_text("{bad json", encoding="utf-8")
+    shell = SearchShell(index_path=index_path)
+
+    for command in ("load", "find good", "explain good", "benchmark"):
+        try:
+            assert shell.execute(command) is True
+        except Exception as exc:  # pragma: no cover - documents regression output.
+            pytest.fail(f"{command} raised {type(exc).__name__}: {exc}")
+
+    output = capsys.readouterr().out
+
+    assert "Invalid index file" in output
+    assert "Run 'build' to regenerate it" in output
+    assert "Traceback" not in output
+
+
 def test_invalid_ranker_options_report_user_error(tmp_path, capsys) -> None:
     from src.main import SearchShell
     from src.search import IndexStore, SearchIndex
