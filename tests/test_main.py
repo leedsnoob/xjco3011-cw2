@@ -22,6 +22,13 @@ class FakeCrawler:
         ]
 
 
+def test_progress_bar_handles_zero_total_and_small_first_step() -> None:
+    from src.main import format_progress_bar
+
+    assert format_progress_bar(0, 0) == "[..........]"
+    assert format_progress_bar(1, 100) == "[#.........]"
+
+
 def test_load_print_and_find_commands_use_persisted_index(tmp_path, capsys) -> None:
     from src.main import SearchShell
     from src.search import IndexStore, SearchIndex
@@ -37,6 +44,10 @@ def test_load_print_and_find_commands_use_persisted_index(tmp_path, capsys) -> N
 
     output = capsys.readouterr().out
 
+    assert "Progress [##########] 1/1 Load index" in output
+    assert "Progress [##########] 1/1 Print index entry" in output
+    assert "Progress [#####.....] 1/2 Load search index" in output
+    assert "Progress [##########] 2/2 Search query" in output
     assert "Loaded index" in output
     assert "frequency=2" in output
     assert "https://quotes.toscrape.com/page/2/" in output
@@ -52,6 +63,9 @@ def test_build_command_saves_index_from_crawler(tmp_path, capsys) -> None:
 
     output = capsys.readouterr().out
 
+    assert "Starting crawl" in output
+    assert "Crawl progress [#.........] 1 page(s): https://quotes.toscrape.com/" in output
+    assert "Building index from 1 page(s)" in output
     assert "Built index for 1 page(s)" in output
     assert index_path.exists()
 
@@ -169,6 +183,8 @@ def test_cli_explain_command_outputs_term_contributions(tmp_path, capsys) -> Non
     output = capsys.readouterr().out
 
     assert "ranker=bm25" in output
+    assert "Progress [#####.....] 1/2 Load explanation index" in output
+    assert "Progress [##########] 2/2 Explain ranking" in output
     assert "tf=" in output
     assert "df=" in output
     assert "idf=" in output
@@ -206,6 +222,8 @@ def test_cli_benchmark_command_reports_timings(tmp_path, capsys) -> None:
     output = capsys.readouterr().out
 
     assert "Benchmark results" in output
+    assert "Progress [##........] 1/5 Load benchmark index" in output
+    assert "Progress [##########] 5/5 Print ranking comparison" in output
     assert "load_ms=" in output
     assert "word_lookup_ms=" in output
     assert "tfidf_query_ms=" in output
@@ -231,6 +249,8 @@ def test_cli_benchmark_can_compare_bm25_parameter_grid(tmp_path, capsys) -> None
     output = capsys.readouterr().out
 
     assert "BM25 parameter comparison" in output
+    assert "Progress [###.......] 1/3 BM25 grid" in output
+    assert "Progress [##########] 3/3 BM25 grid" in output
     assert "k1=0.9 b=0.4" in output
     assert "k1=1.2 b=0.75" in output
     assert "k1=1.5 b=0.9" in output
@@ -246,6 +266,8 @@ def test_cli_benchmark_can_run_synthetic_stress_test(capsys) -> None:
     output = capsys.readouterr().out
 
     assert "Synthetic stress benchmark:" in output
+    assert "Progress [###.......] 1/3 Synthetic stress" in output
+    assert "Progress [##########] 3/3 Synthetic stress" in output
     assert "| pages | terms | index_kb | candidates | build_ms |" in output
     assert "| 100 |" in output
     assert "| 500 |" in output
