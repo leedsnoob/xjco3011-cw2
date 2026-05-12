@@ -18,6 +18,7 @@ TDD is shown as a repeated workflow across several commits.
 | Algorithm comparison evidence | `9e040da test: require algorithm comparison benchmark evidence` | `15d7efc feat: compare ranking algorithms in benchmark output` | `tfidf_top`, `bm25_top`, and per-function timings |
 | Release-quality hardening | `feature/release-quality-hardening` | docstrings, type hints, `.env` ignore rules, engineering practice notes | `python3 -m compileall src tests` |
 | Documentation tone review | `feature/documentation-tone-review` | English-only project docs, direct wording, Safari/Chrome practice comparison, source links | markdown wording scan and local link check |
+| Synthetic stress benchmarking | `1d3da13 test: cover synthetic stress benchmark behavior` | `8671eff feat: add synthetic stress benchmark command` | `python3 -m src.main benchmark --stress` |
 
 The key video command is:
 
@@ -46,6 +47,7 @@ The suite uses unit, integration-style CLI, persistence, and mocked crawler test
 | Malformed `--ranker` usage | `tests/test_main.py` |
 | Unmatched quote query handling | `tests/test_main.py`, `tests/test_search.py` |
 | Empty-index benchmark grid handling | `tests/test_main.py` |
+| Synthetic stress benchmark behavior | `tests/test_stress_benchmark.py`, `tests/test_main.py` |
 | CI coverage gate | `.github/workflows/tests.yml`, `pyproject.toml` |
 
 Current local verification:
@@ -69,6 +71,7 @@ The implementation optimizes the query path. The crawler delay is a correctness 
 | BM25 optional ranking | Adds term saturation and length normalization | `SearchIndex.bm25_contribution` |
 | Explain command | Makes ranking transparent and auditable | `python3 -m src.main explain good friends` |
 | Benchmark command | Measures local query and ranking costs | `python3 -m src.main benchmark --bm25-grid` |
+| Stress benchmark command | Measures synthetic scaling for local index/query work | `python3 -m src.main benchmark --stress` |
 | Ranking comparison | Compares TF-IDF and BM25 top results directly | `Ranking comparison:` benchmark output |
 | Engineering practice | Records code-structure, `.env`, type-hint, docstring, CI, and release decisions | `docs/ENGINEERING_PRACTICES.md` |
 

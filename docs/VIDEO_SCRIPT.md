@@ -15,6 +15,7 @@ python3 -m src.main find --ranker tfidf good friends
 python3 -m src.main find --ranker bm25 good friends
 python3 -m src.main explain good friends
 python3 -m src.main benchmark --bm25-grid
+python3 -m src.main benchmark --stress
 python3 -m src.main find
 python3 -m src.main find freinds
 ```
@@ -30,6 +31,7 @@ Say:
 - TF-IDF is the default advanced ranking model; BM25 is available as a modern keyword-ranking option.
 - `explain` shows why a result is ranked by exposing term contribution details.
 - `benchmark --bm25-grid` reports local search timings and compares three BM25 parameter settings.
+- `benchmark --stress` builds synthetic local indexes and shows scaling evidence without hitting the live website.
 - The benchmark also compares TF-IDF and BM25 top results and reports timing for word lookup, TF-IDF search, BM25 search, phrase search, and explain.
 
 ## 2:00-3:30 Code Walkthrough
@@ -47,7 +49,7 @@ Say:
 - TF-IDF and BM25 are computed from the crawled corpus; no training data is required.
 - BM25 uses default `k1=1.2` and `b=0.75` because there are no labelled relevance judgments for tuning.
 - The benchmark compares nearby BM25 settings to show ranking stability and makes no training claim.
-- The complexity evidence covers four tested search functions: word lookup, TF-IDF search, BM25 search, and phrase search.
+- The complexity evidence covers word lookup, TF-IDF search, BM25 search, phrase search, explain, and synthetic stress benchmarking.
 - Positions enable exact phrase search.
 - JSON is chosen because it is easy to inspect and submit.
 
@@ -86,5 +88,5 @@ Summarize:
 
 - AI helped structure the project, design the inverted index, and draft tests.
 - A key correction was making the index store frequency and positions, beyond simple page lists.
-- AI suggestions were treated as drafts: ranking, environment, and edge-case behavior were checked with TDD, coverage, and manual CLI runs.
-- Ethical reflection: AI use must be declared, and I remain responsible for understanding and verifying all submitted code.
+- AI suggestions were treated as drafts: ranking, environment, edge-case behavior, and performance evidence were checked with TDD, coverage, benchmark output, and manual CLI runs.
+- Ethical reflection: AI use must be declared, private data must stay out of prompts, and I remain responsible for understanding and verifying all submitted code.

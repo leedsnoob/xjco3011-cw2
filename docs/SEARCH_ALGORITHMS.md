@@ -118,7 +118,8 @@ Benchmarks measure local algorithm performance:
 - phrase query time;
 - explain command time;
 - TF-IDF scoring time;
-- BM25 scoring time.
+- BM25 scoring time;
+- synthetic stress timing across increasing local corpus sizes.
 
 The benchmark intentionally excludes live crawling delay because the 6-second politeness window is a correctness requirement, not an algorithmic bottleneck to optimize away.
 
@@ -130,6 +131,7 @@ The benchmark intentionally excludes live crawling delay because the 6-second po
 | TF-IDF ranked `find` | `test_tfidf_ranker_is_available_as_default`, `test_cli_benchmark_command_reports_timings` | `O(sum postings + candidate_pages * query_terms)` | Intersects candidate pages before scoring |
 | BM25 ranked `find --ranker bm25` | `test_bm25_penalises_very_long_documents`, `test_cli_find_accepts_ranker_option` | `O(sum postings + candidate_pages * query_terms)` | Reuses candidates and stored document lengths for normalization |
 | Exact phrase search | `test_search_supports_phrase_query_with_positions`, `test_non_adjacent_phrase_query_returns_no_pages` | `O(sum postings + candidate_pages * positions_checked)` | Uses stored positions and avoids raw page scans |
+| Synthetic stress benchmark | `test_stress_benchmark_reports_growth_across_synthetic_sizes`, `test_cli_benchmark_can_run_synthetic_stress_test` | build: `O(total_tokens)`, query: `O(sum postings + candidate_pages * query_terms)` | Uses deterministic generated pages to test scaling without live requests |
 
 The benchmark command also measures `explain`, which has complexity `O(search + result_count * query_terms)` because it performs the ranking search and then reports each term contribution for each returned result.
 
@@ -153,6 +155,22 @@ A naive implementation could store only raw page text and scan every token on ev
 - BM25 uses stored document lengths and the precomputed average document length.
 
 The result is a small and scalable design: adding pages increases index size, while common query work grows mainly with posting-list size and candidate count.
+
+## Stress Benchmarking
+
+The `benchmark --stress` command creates deterministic synthetic documents at 100, 500, and 1000 pages. Each synthetic page has a fixed token count and predictable query terms. This isolates local algorithm behavior from network conditions and from the required crawler delay.
+
+The stress benchmark measures:
+
+- synthetic index build time;
+- generated index size;
+- candidate count for `alpha beta`;
+- TF-IDF query time;
+- BM25 query time;
+- exact phrase query time;
+- explain command time.
+
+This provides stronger evidence than a single corpus benchmark because it shows how the same query path behaves as page count and candidate count grow.
 
 ## Modern Search Practice: Search Engines and Browser Search Fields
 

@@ -36,6 +36,7 @@ The project crawls the quote website politely, builds a case-insensitive inverte
 - Persists the compiled index to `data/index.json` for repeatable search after a single crawl.
 - Provides the required coursework commands: `build`, `load`, `print <word>`, and `find <query>`.
 - Adds higher-band search features: TF-IDF ranking, optional BM25 ranking, exact phrase search, typo suggestions, explainable score breakdowns, and benchmark output.
+- Adds a synthetic stress benchmark for local index/query scaling evidence.
 - Includes 48 automated tests with mocked HTTP responses, mocked politeness delay, CLI checks, persistence checks, edge cases, branch coverage, and a 90% CI coverage gate.
 - Documents algorithm choices, complexity, performance evidence, GenAI reflection, and professional Git workflow.
 
@@ -98,6 +99,7 @@ explain good friends
 explain --ranker bm25 good friends
 benchmark
 benchmark --bm25-grid
+benchmark --stress
 help
 exit
 ```
@@ -114,6 +116,7 @@ python3 -m src.main find --ranker bm25 good friends
 python3 -m src.main find '"good friends"'
 python3 -m src.main explain good friends
 python3 -m src.main benchmark --bm25-grid
+python3 -m src.main benchmark --stress
 ```
 
 `build` performs live HTTP requests and intentionally waits between requests to satisfy the politeness requirement. The other commands load the saved index and run locally.
@@ -132,6 +135,7 @@ python3 -m src.main benchmark --bm25-grid
 | `explain <query>` | Show per-term score contributions | `python3 -m src.main explain good friends` |
 | `benchmark` | Time local lookup and ranking paths | `python3 -m src.main benchmark` |
 | `benchmark --bm25-grid` | Compare BM25 parameter settings | `python3 -m src.main benchmark --bm25-grid` |
+| `benchmark --stress` | Measure synthetic local index/query scaling | `python3 -m src.main benchmark --stress` |
 
 ## Architecture
 
@@ -214,6 +218,7 @@ Example benchmark areas:
 | Phrase search | `phrase_query_ms` | `O(sum postings + candidate_pages * positions_checked)` |
 | Explainable ranking | `explain_ms` | `O(search + result_count * query_terms)` |
 | Suggestions | outside default timing | `O(vocabulary_size)` |
+| Synthetic stress build | `build_ms` in `benchmark --stress` | `O(total_tokens)` |
 
 Current benchmark evidence and the TF-IDF versus BM25 comparison are recorded in [docs/BENCHMARKS.md](docs/BENCHMARKS.md). The detailed algorithm discussion is in [docs/SEARCH_ALGORITHMS.md](docs/SEARCH_ALGORITHMS.md).
 
@@ -250,6 +255,7 @@ GitHub Actions runs the same checks on Python 3.9 and 3.12 with a configured cov
 |   |-- crawler.py       # polite crawler and HTML parser
 |   |-- indexer.py       # tokenizer and inverted index builder
 |   |-- search.py        # persisted index, lookup, ranking, suggestions
+|   |-- stress_benchmark.py
 |   `-- main.py          # interactive shell and one-shot CLI commands
 |-- tests/
 |   |-- fixtures.py
@@ -265,6 +271,7 @@ GitHub Actions runs the same checks on Python 3.9 and 3.12 with a configured cov
 |   |-- DOCUMENTATION_REVIEW.md
 |   |-- ENGINEERING_PRACTICES.md
 |   |-- EVIDENCE_MATRIX.md
+|   |-- GENAI_EVIDENCE_LOG.md
 |   |-- GENAI_REFLECTION.md
 |   |-- SEARCH_ALGORITHMS.md
 |   |-- TECHNICAL_DESIGN.md
@@ -287,6 +294,7 @@ This repository is structured so that the main marking evidence is easy to find:
 | Search algorithms, complexity, and optimization | [docs/SEARCH_ALGORITHMS.md](docs/SEARCH_ALGORITHMS.md) |
 | Benchmark results and BM25 comparison | [docs/BENCHMARKS.md](docs/BENCHMARKS.md) |
 | Documentation review and tone audit | [docs/DOCUMENTATION_REVIEW.md](docs/DOCUMENTATION_REVIEW.md) |
+| GenAI evidence log | [docs/GENAI_EVIDENCE_LOG.md](docs/GENAI_EVIDENCE_LOG.md) |
 | Testing strategy, mocks, coverage, and CI | [docs/TESTING.md](docs/TESTING.md) |
 | Git workflow, semantic commits, branches, and release process | [docs/DEVELOPMENT_WORKFLOW.md](docs/DEVELOPMENT_WORKFLOW.md) |
 | Engineering practices, type hints, docstrings, and environment policy | [docs/ENGINEERING_PRACTICES.md](docs/ENGINEERING_PRACTICES.md) |

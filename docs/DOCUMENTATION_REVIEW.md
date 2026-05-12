@@ -10,6 +10,7 @@ This review covers the project-authored Markdown documentation:
 - `docs/DEVELOPMENT_WORKFLOW.md`
 - `docs/ENGINEERING_PRACTICES.md`
 - `docs/EVIDENCE_MATRIX.md`
+- `docs/GENAI_EVIDENCE_LOG.md`
 - `docs/GENAI_REFLECTION.md`
 - `docs/SEARCH_ALGORITHMS.md`
 - `docs/TECHNICAL_DESIGN.md`

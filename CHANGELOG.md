@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.0.7 - Stress Benchmark and GenAI Evidence
+
+### Added
+
+- `benchmark --stress` command for deterministic synthetic index/query scaling evidence.
+- `src/stress_benchmark.py` with local stress benchmark generation, timing, and formatting.
+- Tests for synthetic stress benchmark behavior and CLI output.
+- `docs/GENAI_EVIDENCE_LOG.md` linking AI use to human decisions, risks, and verification evidence.
+
+### Changed
+
+- Expanded benchmark, search algorithm, testing, engineering, README, video script, and GenAI documentation to cover stress benchmarking and stronger GenAI reflection evidence.
+
 ## v1.0.6 - Documentation Tone Review
 
 ### Changed

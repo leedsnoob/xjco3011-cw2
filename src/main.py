@@ -17,6 +17,7 @@ from src.search import (
     format_explanations,
     format_results,
 )
+from src.stress_benchmark import format_stress_benchmark, run_stress_benchmark
 
 
 BM25_PARAMETER_GRID = [(0.9, 0.4), (1.2, 0.75), (1.5, 0.9)]
@@ -68,7 +69,7 @@ class SearchShell:
             self._explain(rest)
             return True
         if command == "benchmark":
-            self._benchmark(include_bm25_grid=rest == "--bm25-grid")
+            self._benchmark_command(rest)
             return True
 
         print(f"Unknown command: {command}. Type 'help' for available commands.")
@@ -162,6 +163,17 @@ class SearchShell:
             print(str(exc))
             return
         print(format_explanations(explanations, query))
+
+    def _benchmark_command(self, option: str) -> None:
+        """Dispatch benchmark variants."""
+
+        if option == "--stress":
+            print(format_stress_benchmark(run_stress_benchmark()))
+            return
+        if option and option != "--bm25-grid":
+            print("Usage: benchmark [--bm25-grid|--stress]")
+            return
+        self._benchmark(include_bm25_grid=option == "--bm25-grid")
 
     def _benchmark(self, include_bm25_grid: bool = False) -> None:
         """Print local timing evidence for lookup, search, explain, and rankers."""
@@ -279,6 +291,7 @@ def help_text() -> str:
             "  find --ranker bm25 <query>",
             "  explain <query>    show ranking contribution details",
             "  benchmark          measure local search timings",
+            "  benchmark --stress measure synthetic scaling evidence",
             '  find "a phrase"    find pages containing an exact phrase',
             "  help               show this help",
             "  exit               leave the shell",

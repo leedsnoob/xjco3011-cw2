@@ -25,6 +25,7 @@ The production code is separated into focused modules:
 | `src/crawler.py` | Polite requests, pagination, HTML parsing |
 | `src/indexer.py` | Tokenization, inverted index construction, serializable index schema |
 | `src/search.py` | Index loading, querying, ranking, suggestions, explanation formatting |
+| `src/stress_benchmark.py` | Synthetic stress benchmark generation and timing |
 | `src/main.py` | CLI command dispatch, user-facing messages, benchmark output |
 
 Tests mirror this structure under `tests/`, with deterministic fixtures and temporary files in place of live network dependencies.
@@ -50,6 +51,7 @@ Local verification commands:
 python3 -m pytest --cov=src --cov-report=term-missing
 python3 -m compileall src tests
 python3 -m src.main benchmark --bm25-grid
+python3 -m src.main benchmark --stress
 ```
 
 The CI workflow runs the test suite and compile check on Python 3.9 and 3.12. Coverage is configured in `pyproject.toml` with branch coverage enabled and a `fail_under = 90` gate. The current local suite reaches 100% coverage.

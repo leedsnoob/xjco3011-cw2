@@ -7,6 +7,7 @@ Benchmarks measure local index loading and search ranking work. They exclude liv
 ```bash
 python3 -m src.main benchmark
 python3 -m src.main benchmark --bm25-grid
+python3 -m src.main benchmark --stress
 ```
 
 ## Current Result
@@ -34,6 +35,31 @@ BM25 parameter comparison:
 
 Exact timings vary by machine, but the command provides reproducible evidence for comparing query processing paths.
 
+## Synthetic Stress Result
+
+The stress benchmark builds deterministic synthetic indexes and measures local query paths at increasing corpus sizes. It does not crawl the live website.
+
+Command:
+
+```bash
+python3 -m src.main benchmark --stress
+```
+
+Current local result:
+
+```text
+Synthetic stress benchmark:
+- query=alpha beta
+- default_tokens_per_page=80
+| pages | terms | index_kb | candidates | build_ms | tfidf_ms | bm25_ms | phrase_ms | explain_ms |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 100 | 245 | 479.9 | 50 | 4.995 | 0.194 | 0.144 | 0.171 | 0.224 |
+| 500 | 645 | 2427.6 | 250 | 30.074 | 0.755 | 0.724 | 0.723 | 1.253 |
+| 1000 | 1145 | 4862.2 | 500 | 73.177 | 1.613 | 1.679 | 2.039 | 3.272 |
+```
+
+The row growth is the important evidence: the synthetic index size and candidate count increase with the corpus, while local query timings remain low for this coursework-scale implementation.
+
 ## Function Benchmark Matrix
 
 | Function | Benchmark metric | Complexity | Optimization evidence |
@@ -43,6 +69,7 @@ Exact timings vary by machine, but the command provides reproducible evidence fo
 | BM25 multi-term search | `bm25_query_ms` | `O(sum postings + candidate_pages * query_terms)` | Reuses candidates and stored document lengths |
 | Exact phrase search | `phrase_query_ms` | `O(sum postings + candidate_pages * positions_checked)` | Uses stored token positions and avoids re-tokenizing text |
 | Explainable ranking | `explain_ms` | `O(search + result_count * query_terms)` | Reuses ranker contribution calculations |
+| Synthetic stress benchmark | `benchmark --stress` | build: `O(total_tokens)`, query: `O(sum postings + candidate_pages * query_terms)` | Scales corpus size without touching the live crawler |
 
 The benchmark also prints a direct TF-IDF versus BM25 top-result comparison. The ranking comparison covers two algorithms; the grid covers BM25 parameter settings.
 
@@ -56,6 +83,7 @@ The benchmark also prints a direct TF-IDF versus BM25 top-result comparison. The
 - BM25 scoring: `O(candidate_pages * query_terms)`.
 - Explain command: `O(search + result_count * query_terms)`.
 - Query suggestions: `O(vocabulary_size)`.
+- Synthetic stress build: `O(total_tokens)`.
 
 ## Optimization Choices
 
@@ -63,6 +91,7 @@ The benchmark also prints a direct TF-IDF versus BM25 top-result comparison. The
 - The index stores positions at build time, so phrase search can use token offsets already stored in the index.
 - Document lengths are stored in metadata, so BM25 can normalize by page length from the saved index.
 - TF-IDF and BM25 reuse the same candidate set from the inverted index.
+- Synthetic stress tests scale the local index/query path while preserving crawler politeness.
 
 ## Optimization Analysis
 

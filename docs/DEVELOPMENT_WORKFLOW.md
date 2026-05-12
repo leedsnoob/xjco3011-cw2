@@ -14,6 +14,7 @@ This coursework uses a lightweight GitHub Flow:
 - `feature/release-quality-hardening` records engineering practice and release quality.
 - `feature/readme-open-source-polish` improves the repository entrypoint.
 - `feature/documentation-tone-review` checks project documentation tone and modern search practice evidence.
+- `feature/stress-benchmark-genai-evidence` adds synthetic stress testing and stronger GenAI reflection evidence.
 - `release/v1.0.0` is used for final release checks, index refresh, and tag preparation.
 
 Each feature branch is merged back with a merge commit so the branch history remains visible in `git log --graph --decorate --all`.
