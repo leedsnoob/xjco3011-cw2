@@ -23,6 +23,7 @@ python3 -m src.main find freinds
 Say:
 
 - `build` crawls the site, waits at least 6 seconds between live requests, builds the index, and saves `data/index.json`.
+- The progress bars show crawl, indexing, searching, explanation, benchmark, and stress benchmark stages, so a live build does not look frozen.
 - `load` restores the saved index.
 - `print` displays the inverted index entry for a term.
 - `find` supports single-word and multi-word queries.
@@ -65,7 +66,8 @@ Say:
 
 - Tests mock HTTP and sleep, so crawler behavior is tested quickly.
 - Tests cover crawler, indexer, search, persistence, CLI, edge cases, TF-IDF, BM25, explain, and benchmark behavior.
-- The current local suite has 48 tests and 100% coverage.
+- CLI tests now also assert progress output for the commands that can otherwise look silent.
+- The current local suite has 55 tests and 100% coverage.
 - The CI workflow runs tests and a coverage gate automatically.
 
 ## 4:00-4:30 Version Control

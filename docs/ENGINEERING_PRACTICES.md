@@ -6,6 +6,15 @@ This document records the engineering-quality decisions used to keep the coursew
 
 The project has no `.env` file requirement because it uses no secrets, API keys, database credentials, or deployment-specific settings. Adding a real `.env` would create unnecessary configuration surface.
 
+Install dependencies from `requirements.txt` in the same Python environment that runs the CLI:
+
+```bash
+python3 -m pip install -r requirements.txt
+python3 -c "import bs4, requests; print(bs4.__version__, requests.__version__)"
+```
+
+`beautifulsoup4` is the package name and `bs4` is the import name. A terminal, IDE, and agent process can each use a different interpreter, so successful tests in one environment do not prove that another local environment has the same packages installed.
+
 The `.gitignore` explicitly ignores:
 
 - `.env` and `.env.*`;
@@ -26,7 +35,7 @@ The production code is separated into focused modules:
 | `src/indexer.py` | Tokenization, inverted index construction, serializable index schema |
 | `src/search.py` | Index loading, querying, ranking, suggestions, explanation formatting |
 | `src/stress_benchmark.py` | Synthetic stress benchmark generation and timing |
-| `src/main.py` | CLI command dispatch, user-facing messages, benchmark output |
+| `src/main.py` | CLI command dispatch, user-facing messages, progress output, benchmark output |
 
 Tests mirror this structure under `tests/`, with deterministic fixtures and temporary files in place of live network dependencies.
 

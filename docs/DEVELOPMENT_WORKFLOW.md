@@ -19,6 +19,15 @@ This coursework uses a lightweight GitHub Flow:
 
 Each feature branch is merged back with a merge commit so the branch history remains visible in `git log --graph --decorate --all`.
 
+## Planning Artifacts
+
+The `docs/superpowers/` directory is coursework process evidence. It contains the design specification and implementation plan that guided the first build of the search tool:
+
+- `docs/superpowers/specs/2026-05-11-search-engine-design.md`;
+- `docs/superpowers/plans/2026-05-11-search-engine-implementation.md`.
+
+These files are documentation artifacts only. They are not runtime dependencies, and the application can run without any local agent or planning tool installed.
+
 ## Semantic Commits
 
 Commit messages follow Conventional Commits:
@@ -45,6 +54,8 @@ Algorithm and CLI behavior changes follow test-driven development:
 6. Commit tests separately from implementation when the history benefits from showing the red-green order.
 
 The advanced ranking branch intentionally commits ranking tests before the ranking implementation to make the TDD process visible.
+
+Recent command-line usability changes follow the same pattern: tests first required visible progress output for build, load, search, explanation, benchmark, and synthetic stress benchmark paths, then the CLI implementation was updated to satisfy those tests.
 
 ## Quality Gates
 

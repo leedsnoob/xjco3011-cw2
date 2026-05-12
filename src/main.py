@@ -22,6 +22,36 @@ from src.stress_benchmark import format_stress_benchmark, run_stress_benchmark
 
 BM25_PARAMETER_GRID = [(0.9, 0.4), (1.2, 0.75), (1.5, 0.9)]
 BENCHMARK_QUERY = "good friends"
+PROGRESS_BAR_WIDTH = 10
+CRAWL_PROGRESS_TARGET_PAGES = 10
+
+
+def format_progress_bar(step: int, total: int) -> str:
+    """Return a fixed-width ASCII progress bar."""
+
+    if total <= 0:
+        total = 1
+    bounded_step = max(0, min(step, total))
+    filled = int(PROGRESS_BAR_WIDTH * bounded_step / total)
+    if bounded_step and filled == 0:
+        filled = 1
+    return f"[{'#' * filled}{'.' * (PROGRESS_BAR_WIDTH - filled)}]"
+
+
+def format_progress_line(label: str, step: int, total: int, detail: str = "") -> str:
+    """Return a user-facing progress line."""
+
+    suffix = f": {detail}" if detail else ""
+    return f"Progress {format_progress_bar(step, total)} {step}/{total} {label}{suffix}"
+
+
+def format_crawl_progress_line(page_count: int, url: str) -> str:
+    """Return progress for a crawl whose final page count is discovered as it runs."""
+
+    return (
+        f"Crawl progress {format_progress_bar(page_count, CRAWL_PROGRESS_TARGET_PAGES)} "
+        f"{page_count} page(s): {url}"
+    )
 
 
 class SearchShell:
@@ -90,20 +120,35 @@ class SearchShell:
     def _build(self) -> None:
         """Crawl the site, build the index, and persist it."""
 
+        print(
+            "Starting crawl. Live requests wait at least 6 seconds after the first page.",
+            flush=True,
+        )
+        print(format_progress_line("Start crawl", 1, 3), flush=True)
+        pages = []
         try:
-            pages = list(self.crawler.crawl())
+            for page_count, page in enumerate(self.crawler.crawl(), start=1):
+                pages.append(page)
+                print(format_crawl_progress_line(page_count, page.url), flush=True)
         except CrawlError as exc:
             print(str(exc))
             return
 
+        print(f"Building index from {len(pages)} page(s).", flush=True)
+        print(format_progress_line("Build index", 2, 3), flush=True)
         documents = [PageDocument.from_crawled_page(page) for page in pages]
         self.index = SearchIndex.from_dict(build_search_index(documents))
+        print(format_progress_line("Save index", 3, 3), flush=True)
         self.index_store.save(self.index)
         print(f"Built index for {len(pages)} page(s) at {self.index_store.path}.")
 
     def _load(self) -> None:
         """Load the compiled index into the current shell session."""
 
+        print(
+            format_progress_line("Load index", 1, 1, str(self.index_store.path)),
+            flush=True,
+        )
         try:
             self.index = self.index_store.load()
         except FileNotFoundError as exc:
@@ -120,6 +165,7 @@ class SearchShell:
         if not self._ensure_index_loaded():
             print("No index loaded. Run 'build' or 'load' first.")
             return
+        print(format_progress_line("Print index entry", 1, 1, word), flush=True)
         print(self.index.format_index_entry(word))
 
     def _find(self, query: str) -> None:
@@ -133,10 +179,12 @@ class SearchShell:
         if not query:
             print("Usage: find <query terms>")
             return
+        print(format_progress_line("Load search index", 1, 2), flush=True)
         if not self._ensure_index_loaded():
             print("No index loaded. Run 'build' or 'load' first.")
             return
         try:
+            print(format_progress_line("Search query", 2, 2, query), flush=True)
             results = self.index.find(query, ranker=ranker)
         except ValueError as exc:
             print(str(exc))
@@ -154,10 +202,12 @@ class SearchShell:
         if not query:
             print("Usage: explain <query terms>")
             return
+        print(format_progress_line("Load explanation index", 1, 2), flush=True)
         if not self._ensure_index_loaded():
             print("No index loaded. Run 'build' or 'load' first.")
             return
         try:
+            print(format_progress_line("Explain ranking", 2, 2, query), flush=True)
             explanations = self.index.explain(query, ranker=ranker)
         except ValueError as exc:
             print(str(exc))
@@ -168,7 +218,22 @@ class SearchShell:
         """Dispatch benchmark variants."""
 
         if option == "--stress":
-            print(format_stress_benchmark(run_stress_benchmark()))
+            def report_progress(step: int, total: int, page_count: int) -> None:
+                print(
+                    format_progress_line(
+                        "Synthetic stress",
+                        step,
+                        total,
+                        f"{page_count} pages",
+                    ),
+                    flush=True,
+                )
+
+            print(
+                format_stress_benchmark(
+                    run_stress_benchmark(progress=report_progress)
+                )
+            )
             return
         if option and option != "--bm25-grid":
             print("Usage: benchmark [--bm25-grid|--stress]")
@@ -178,6 +243,7 @@ class SearchShell:
     def _benchmark(self, include_bm25_grid: bool = False) -> None:
         """Print local timing evidence for lookup, search, explain, and rankers."""
 
+        print(format_progress_line("Load benchmark index", 1, 5), flush=True)
         start = time.perf_counter()
         if not self._ensure_index_loaded():
             print("No index loaded. Run 'build' or 'load' first.")
@@ -188,10 +254,12 @@ class SearchShell:
         result_sets: dict[str, list[SearchResult]] = {}
 
         # Measure local algorithm work only; live crawling delay is a requirement.
+        print(format_progress_line("Word lookup", 2, 5), flush=True)
         lookup_start = time.perf_counter()
         self.index.format_index_entry("good")
         timings["word_lookup_ms"] = (time.perf_counter() - lookup_start) * 1000
 
+        print(format_progress_line("Run ranking queries", 3, 5), flush=True)
         queries = {
             "tfidf_query_ms": (BENCHMARK_QUERY, "tfidf"),
             "bm25_query_ms": (BENCHMARK_QUERY, "bm25"),
@@ -204,10 +272,12 @@ class SearchShell:
             if query == BENCHMARK_QUERY:
                 result_sets[ranker] = results
 
+        print(format_progress_line("Explain ranking", 4, 5), flush=True)
         explain_start = time.perf_counter()
         self.index.explain(BENCHMARK_QUERY, ranker="bm25")
         timings["explain_ms"] = (time.perf_counter() - explain_start) * 1000
 
+        print(format_progress_line("Print ranking comparison", 5, 5), flush=True)
         print("Benchmark results:")
         print(f"- pages={self.index.metadata['page_count']}")
         print(f"- terms={len(self.index.index)}")
@@ -245,7 +315,16 @@ class SearchShell:
             print(f"- No benchmark candidates for '{BENCHMARK_QUERY}'.")
             return
 
-        for k1, b in BM25_PARAMETER_GRID:
+        for step, (k1, b) in enumerate(BM25_PARAMETER_GRID, start=1):
+            print(
+                format_progress_line(
+                    "BM25 grid",
+                    step,
+                    len(BM25_PARAMETER_GRID),
+                    f"k1={k1} b={b}",
+                ),
+                flush=True,
+            )
             score_start = time.perf_counter()
             scored = [
                 (
@@ -284,7 +363,7 @@ def help_text() -> str:
     return "\n".join(
         [
             "Commands:",
-            "  build              crawl the site, build the index, and save it",
+            "  build              crawl with progress, build the index, and save it",
             "  load               load the saved index from disk",
             "  print <word>       print the inverted index entry for a word",
             "  find <query>       find pages containing all query terms",

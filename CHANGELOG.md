@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.0.8 - CLI Progress and Environment Clarity
+
+### Added
+
+- Progress output for build, load, print, find, explain, benchmark, BM25 grid, and synthetic stress benchmark command paths.
+- Documentation explaining why live `build` takes noticeable time under the 6-second politeness rule.
+- Environment troubleshooting for `beautifulsoup4` versus the `bs4` import name.
+- Documentation links explaining the `docs/superpowers/` planning artifacts.
+
 ## v1.0.7 - Stress Benchmark and GenAI Evidence
 
 ### Added

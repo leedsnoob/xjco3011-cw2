@@ -27,7 +27,7 @@ The project uses `pyproject.toml` to configure pytest and coverage. The coverage
 Current local result:
 
 ```text
-48 passed
+55 passed
 Total coverage: 100.00%
 ```
 
@@ -52,6 +52,7 @@ The test suite covers:
 - missing word handling;
 - typo suggestions;
 - CLI `load`, `print`, `find`, `help`, unknown command, and `exit`.
+- CLI progress output for build, load, print, find, explain, benchmark, BM25 grid comparison, and synthetic stress benchmark commands.
 - CLI `explain`, `benchmark`, invalid ranker, missing index, EOF, and interactive loop handling.
 - synthetic stress benchmark generation, formatting, validation, and CLI output.
 
@@ -116,6 +117,8 @@ python3 -m src.main find
 python3 -m src.main find freinds
 python3 -m src.main benchmark --stress
 ```
+
+During `build`, point out the progress output. The live crawler deliberately waits at least 6 seconds between requests, so a fresh crawl is expected to take noticeable time.
 
 Also show:
 

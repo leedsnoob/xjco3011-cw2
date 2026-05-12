@@ -19,6 +19,7 @@ TDD is shown as a repeated workflow across several commits.
 | Release-quality hardening | `feature/release-quality-hardening` | docstrings, type hints, `.env` ignore rules, engineering practice notes | `python3 -m compileall src tests` |
 | Documentation tone review | `feature/documentation-tone-review` | English-only project docs, direct wording, Safari/Chrome practice comparison, source links | markdown wording scan and local link check |
 | Synthetic stress benchmarking | `1d3da13 test: cover synthetic stress benchmark behavior` | `8671eff feat: add synthetic stress benchmark command` | `python3 -m src.main benchmark --stress` |
+| CLI progress output | `cff19ea test: require visible CLI progress output` | `0fd64da feat: add progress output to CLI commands` | `python3 -m src.main build`, `python3 -m src.main benchmark --stress` |
 
 The key video command is:
 
@@ -53,7 +54,7 @@ The suite uses unit, integration-style CLI, persistence, and mocked crawler test
 Current local verification:
 
 ```text
-48 passed
+55 passed
 Total coverage: 100.00%
 ```
 
