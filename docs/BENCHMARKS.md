@@ -2,6 +2,11 @@
 
 Benchmarks measure local index loading and search ranking work. They exclude live crawling time because the 6-second politeness delay is a correctness requirement.
 
+The benchmark now includes a before-and-after comparison:
+
+- naive baseline: reconstruct page token lists from stored positions and scan them as if no inverted index were available;
+- optimized path: use the inverted index, intersect posting lists, and score only candidate pages.
+
 ## Command
 
 ```bash
@@ -18,18 +23,21 @@ Measured on the local generated `data/index.json`:
 Benchmark results:
 - pages=10
 - terms=850
-- load_ms=1.661
-- word_lookup_ms=0.010
-- tfidf_query_ms=0.020
-- bm25_query_ms=0.011
-- phrase_query_ms=0.011
-- explain_ms=0.016
+- load_ms=1.625
+- word_lookup_ms=0.015
+- naive_scan_ms=0.365
+- optimized_query_ms=0.029
+- tfidf_query_ms=0.029
+- bm25_query_ms=0.009
+- phrase_query_ms=0.010
+- explain_ms=0.036
+- optimized_vs_naive_speedup=12.77x
 Ranking comparison:
 - tfidf_top=https://quotes.toscrape.com/page/2/ score=22.7502
 - bm25_top=https://quotes.toscrape.com/page/2/ score=5.9317
 BM25 parameter comparison:
 - k1=0.9 b=0.4 top=https://quotes.toscrape.com/page/2/ score=5.7377 time_ms=0.005
-- k1=1.2 b=0.75 top=https://quotes.toscrape.com/page/2/ score=5.9317 time_ms=0.004
+- k1=1.2 b=0.75 top=https://quotes.toscrape.com/page/2/ score=5.9317 time_ms=0.003
 - k1=1.5 b=0.9 top=https://quotes.toscrape.com/page/2/ score=6.1639 time_ms=0.003
 ```
 
@@ -51,11 +59,11 @@ Current local result:
 Synthetic stress benchmark:
 - query=alpha beta
 - default_tokens_per_page=80
-| pages | terms | index_kb | candidates | build_ms | tfidf_ms | bm25_ms | phrase_ms | explain_ms |
-|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 100 | 245 | 479.9 | 50 | 4.995 | 0.194 | 0.144 | 0.171 | 0.224 |
-| 500 | 645 | 2427.6 | 250 | 30.074 | 0.755 | 0.724 | 0.723 | 1.253 |
-| 1000 | 1145 | 4862.2 | 500 | 73.177 | 1.613 | 1.679 | 2.039 | 3.272 |
+| pages | terms | index_kb | candidates | build_ms | naive_ms | optimized_ms | speedup | tfidf_ms | bm25_ms | phrase_ms | explain_ms |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 100 | 245 | 479.9 | 50 | 5.052 | 1.324 | 0.108 | 12.23x | 0.108 | 0.108 | 0.110 | 0.188 |
+| 500 | 645 | 2427.6 | 250 | 23.484 | 7.112 | 0.471 | 15.11x | 0.471 | 0.570 | 0.591 | 1.199 |
+| 1000 | 1145 | 4862.2 | 500 | 67.055 | 16.702 | 1.332 | 12.54x | 1.332 | 1.190 | 1.298 | 2.036 |
 ```
 
 The row growth is the important evidence: the synthetic index size and candidate count increase with the corpus, while local query timings remain low for this coursework-scale implementation.
@@ -64,6 +72,8 @@ The row growth is the important evidence: the synthetic index size and candidate
 
 | Function | Benchmark metric | Complexity | Optimization evidence |
 |---|---:|---|---|
+| Naive scan baseline | `naive_scan_ms` | `O(total_tokens * query_terms)` | Simulates the pre-optimization full-token scan |
+| Optimized multi-term search | `optimized_query_ms` | `O(sum postings + candidate_pages * query_terms)` | Uses posting-list intersection before scoring |
 | Word lookup / `print good` | `word_lookup_ms` | `O(postings(term))` | Direct inverted-index lookup; avoids full document scans |
 | TF-IDF multi-term search | `tfidf_query_ms` | `O(sum postings + candidate_pages * query_terms)` | Intersects posting lists before scoring candidates |
 | BM25 multi-term search | `bm25_query_ms` | `O(sum postings + candidate_pages * query_terms)` | Reuses candidates and stored document lengths |
@@ -73,9 +83,12 @@ The row growth is the important evidence: the synthetic index size and candidate
 
 The benchmark also prints a direct TF-IDF versus BM25 top-result comparison. The ranking comparison covers two algorithms; the grid covers BM25 parameter settings.
 
+The `optimized_vs_naive_speedup` value is the measured naive scan time divided by the optimized query time. Exact values vary by machine, but the relationship demonstrates the impact of moving from full-token scanning to inverted-index candidate retrieval.
+
 ## Complexity Summary
 
 - Build index: `O(total_tokens)`.
+- Naive scan baseline: `O(total_tokens * query_terms)`.
 - Print word entry: `O(postings(term))`.
 - AND query candidate selection: `O(sum postings for query terms)`.
 - Phrase query: `O(candidate_pages * positions_checked)`.

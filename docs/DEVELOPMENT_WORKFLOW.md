@@ -15,6 +15,7 @@ This coursework uses a lightweight GitHub Flow:
 - `feature/readme-open-source-polish` improves the repository entrypoint.
 - `feature/documentation-tone-review` checks project documentation tone and modern search practice evidence.
 - `feature/stress-benchmark-genai-evidence` adds synthetic stress testing and stronger GenAI reflection evidence.
+- `feature/benchmark-baseline-comparison` compares the naive scan baseline with the optimized inverted-index query path.
 - `release/v1.0.0` is used for final release checks, index refresh, and tag preparation.
 
 Each feature branch is merged back with a merge commit so the branch history remains visible in `git log --graph --decorate --all`.
@@ -56,6 +57,8 @@ Algorithm and CLI behavior changes follow test-driven development:
 The advanced ranking branch intentionally commits ranking tests before the ranking implementation to make the TDD process visible.
 
 Recent command-line usability changes follow the same pattern: tests first required visible progress output for build, load, search, explanation, benchmark, and synthetic stress benchmark paths, then the CLI implementation was updated to satisfy those tests.
+
+The benchmark baseline comparison follows the same pattern: tests first required `naive_scan_ms`, `optimized_query_ms`, and `optimized_vs_naive_speedup`, then the search and benchmark code added the measured comparison.
 
 ## Quality Gates
 

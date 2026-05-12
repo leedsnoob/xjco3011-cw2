@@ -27,7 +27,7 @@ The project uses `pyproject.toml` to configure pytest and coverage. The coverage
 Current local result:
 
 ```text
-55 passed
+57 passed
 Total coverage: 100.00%
 ```
 
@@ -47,6 +47,7 @@ The test suite covers:
 - `print` output formatting;
 - single-word search;
 - multi-word query intersection;
+- naive scan baseline comparison against optimized inverted-index candidates;
 - exact phrase search;
 - empty query handling;
 - missing word handling;
