@@ -15,6 +15,10 @@ from src.indexer import SerializableIndex, tokenize
 DEFAULT_INDEX_PATH = Path("data/index.json")
 
 
+class InvalidIndexError(RuntimeError):
+    """Raised when the saved index exists but cannot be loaded safely."""
+
+
 @dataclass(frozen=True)
 class SearchResult:
     """One search hit returned by the query engine."""
@@ -299,7 +303,17 @@ class IndexStore:
 
         if not self.path.exists():
             raise FileNotFoundError(f"Index file not found: {self.path}")
-        return SearchIndex.from_dict(json.loads(self.path.read_text(encoding="utf-8")))
+        try:
+            payload = json.loads(self.path.read_text(encoding="utf-8"))
+            return SearchIndex.from_dict(payload)
+        except json.JSONDecodeError as exc:
+            raise InvalidIndexError(
+                f"Invalid index file: {self.path}. Run 'build' to regenerate it."
+            ) from exc
+        except (KeyError, TypeError) as exc:
+            raise InvalidIndexError(
+                f"Invalid index file format: {self.path}. Run 'build' to regenerate it."
+            ) from exc
 
 
 def normalise_query(query: str) -> tuple[bool, list[str]]:

@@ -12,6 +12,7 @@ from src.indexer import PageDocument, build_search_index
 from src.search import (
     DEFAULT_INDEX_PATH,
     IndexStore,
+    InvalidIndexError,
     SearchResult,
     SearchIndex,
     format_explanations,
@@ -151,7 +152,7 @@ class SearchShell:
         )
         try:
             self.index = self.index_store.load()
-        except FileNotFoundError as exc:
+        except (FileNotFoundError, InvalidIndexError) as exc:
             print(str(exc))
             return
         print(f"Loaded index from {self.index_store.path}.")
@@ -368,6 +369,9 @@ class SearchShell:
         try:
             self.index = self.index_store.load()
         except FileNotFoundError:
+            return False
+        except InvalidIndexError as exc:
+            print(str(exc))
             return False
         return True
 
