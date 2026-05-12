@@ -53,6 +53,7 @@ The test suite covers:
 - typo suggestions;
 - CLI `load`, `print`, `find`, `help`, unknown command, and `exit`.
 - CLI `explain`, `benchmark`, invalid ranker, missing index, EOF, and interactive loop handling.
+- synthetic stress benchmark generation, formatting, validation, and CLI output.
 
 ## Mocking Strategy
 
@@ -97,6 +98,7 @@ The coverage gate remains 90% because CI gates should prevent regressions while 
 - malformed `--ranker` usage with no query;
 - unmatched quote handling for phrase queries;
 - empty-index benchmark grid handling.
+- synthetic stress benchmark scaling and input validation.
 
 The `if __name__ == "__main__"` entry-point guard is excluded from coverage because it only delegates to the tested `main()` function.
 
@@ -112,6 +114,7 @@ python3 -m src.main find indifference
 python3 -m src.main find good friends
 python3 -m src.main find
 python3 -m src.main find freinds
+python3 -m src.main benchmark --stress
 ```
 
 Also show:
