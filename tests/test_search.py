@@ -110,6 +110,59 @@ def test_search_returns_ranked_multi_word_results() -> None:
     assert results[0].matched_terms == ["good", "friends"]
 
 
+def test_naive_scan_baseline_matches_index_candidates() -> None:
+    from src.search import SearchIndex
+
+    search_index = SearchIndex.from_dict(sample_index())
+
+    indexed_urls = {result.url for result in search_index.find("good friends")}
+    naive_urls = set(search_index.naive_scan_find("good friends"))
+    phrase_urls = set(search_index.naive_scan_find('"good friends books"'))
+
+    assert naive_urls == indexed_urls
+    assert phrase_urls == {"https://quotes.toscrape.com/page/2/"}
+
+
+def test_naive_scan_baseline_handles_empty_and_sparse_positions() -> None:
+    from src.search import SearchIndex, contains_phrase
+
+    payload = {
+        "metadata": {
+            "base_url": "synthetic://",
+            "built_at": "test",
+            "page_count": 1,
+            "document_lengths": {"synthetic://page/1": 1},
+        },
+        "pages": {
+            "synthetic://page/1": {
+                "title": "Synthetic Page",
+                "word_count": 1,
+            }
+        },
+        "index": {
+            "alpha": {
+                "synthetic://page/1": {
+                    "frequency": 1,
+                    "positions": [3],
+                }
+            },
+            "empty": {
+                "synthetic://page/1": {
+                    "frequency": 0,
+                    "positions": [],
+                }
+            },
+        },
+    }
+    search_index = SearchIndex.from_dict(payload)
+
+    assert search_index.naive_scan_find("") == []
+    assert search_index.naive_scan_find("alpha") == ["synthetic://page/1"]
+    assert search_index.naive_scan_find('"alpha beta"') == []
+    assert contains_phrase([], []) is False
+    assert contains_phrase(["alpha"], ["alpha", "beta"]) is False
+
+
 def test_search_supports_phrase_query_with_positions() -> None:
     from src.search import SearchIndex
 

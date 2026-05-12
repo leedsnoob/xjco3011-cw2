@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.0.10 - Benchmark Baseline Comparison
+
+### Added
+
+- Naive scan benchmark baseline for before-and-after optimization evidence.
+- `benchmark` output for `naive_scan_ms`, `optimized_query_ms`, and `optimized_vs_naive_speedup`.
+- Stress benchmark columns for naive scan time, optimized query time, and measured speedup.
+
+### Changed
+
+- Updated algorithm and benchmark documentation to explain the move from full-token scanning to inverted-index candidate retrieval.
+- Updated test evidence totals to 57 automated tests after adding sparse-position baseline edge coverage.
+
 ## v1.0.9 - Review Readiness Polish
 
 ### Changed

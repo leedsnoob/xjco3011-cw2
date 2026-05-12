@@ -112,6 +112,9 @@ Complexity:
 Benchmarks measure local algorithm performance:
 
 - index load time;
+- naive full-token scan time;
+- optimized inverted-index query time;
+- optimized versus naive speedup;
 - word lookup time;
 - TF-IDF query time;
 - BM25 query time;
@@ -123,10 +126,31 @@ Benchmarks measure local algorithm performance:
 
 The benchmark intentionally excludes live crawling delay because the 6-second politeness window is a correctness requirement, not an algorithmic bottleneck to optimize away.
 
+## Before and After Optimization
+
+The pre-optimization baseline is a naive scan: for each query, rebuild page token lists from stored positions and scan page tokens to find matching pages. This simulates the simpler approach of storing documents and scanning them for every query.
+
+Naive baseline complexity:
+
+- multi-word query: `O(total_tokens * query_terms)`;
+- phrase query: `O(total_tokens * phrase_length)`.
+
+The optimized implementation builds an inverted index once, then retrieves posting lists for the query terms, intersects candidate URLs, and scores only matching candidates.
+
+Optimized complexity:
+
+- candidate retrieval: `O(sum postings for query terms)`;
+- TF-IDF/BM25 scoring: `O(candidate_pages * query_terms)`;
+- phrase verification: `O(candidate_pages * positions_checked)`.
+
+The `benchmark` and `benchmark --stress` commands print `naive_scan_ms`, `optimized_query_ms`, and `optimized_vs_naive_speedup` so the video can show measured before-and-after evidence.
+
 ## Four Search Functions: Tests, Complexity, and Optimization
 
 | Function | Test evidence | Time complexity | Optimization |
 |---|---|---|---|
+| Naive scan baseline | `test_naive_scan_baseline_matches_index_candidates`, `test_cli_benchmark_command_reports_timings` | `O(total_tokens * query_terms)` | Benchmark-only baseline for before-and-after comparison |
+| Optimized multi-word query | `test_search_returns_ranked_multi_word_results`, `test_cli_benchmark_command_reports_timings` | `O(sum postings + candidate_pages * query_terms)` | Uses posting-list intersection before scoring |
 | `print <word>` lookup | `test_format_index_entry_prints_frequency_and_positions`, `test_load_print_and_find_commands_use_persisted_index` | `O(postings(term))` | Uses direct dictionary lookup into the inverted index |
 | TF-IDF ranked `find` | `test_tfidf_ranker_is_available_as_default`, `test_cli_benchmark_command_reports_timings` | `O(sum postings + candidate_pages * query_terms)` | Intersects candidate pages before scoring |
 | BM25 ranked `find --ranker bm25` | `test_bm25_penalises_very_long_documents`, `test_cli_find_accepts_ranker_option` | `O(sum postings + candidate_pages * query_terms)` | Reuses candidates and stored document lengths for normalization |
@@ -165,6 +189,9 @@ The stress benchmark measures:
 - synthetic index build time;
 - generated index size;
 - candidate count for `alpha beta`;
+- naive scan time;
+- optimized query time;
+- measured speedup;
 - TF-IDF query time;
 - BM25 query time;
 - exact phrase query time;

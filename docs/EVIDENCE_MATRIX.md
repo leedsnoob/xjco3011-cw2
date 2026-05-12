@@ -16,6 +16,7 @@ TDD is shown as a repeated workflow across several commits.
 | Remaining edge coverage | `6bf8d73 test: cover interactive and malformed crawler edges` | Existing production behavior verified by new tests | 100% line and branch coverage report |
 | Extreme input hardening | `0b105cc test: cover malformed queries and empty benchmark grid` | `b99450f fix: handle malformed queries and empty benchmark candidates` | malformed ranker, unmatched quote, empty benchmark grid tests |
 | Algorithm comparison evidence | `9e040da test: require algorithm comparison benchmark evidence` | `15d7efc feat: compare ranking algorithms in benchmark output` | `tfidf_top`, `bm25_top`, and per-function timings |
+| Naive versus optimized benchmark evidence | Current benchmark baseline tests in `tests/test_search.py`, `tests/test_main.py`, and `tests/test_stress_benchmark.py` | `SearchIndex.naive_scan_find`, `benchmark`, and `benchmark --stress` report naive scan time, optimized query time, and speedup | `naive_scan_ms`, `optimized_query_ms`, `optimized_vs_naive_speedup` |
 | Release-quality hardening | `feature/release-quality-hardening` | docstrings, type hints, `.env` ignore rules, engineering practice notes | `python3 -m compileall src tests` |
 | Documentation tone review | `feature/documentation-tone-review` | English-only project docs, direct wording, Safari/Chrome practice comparison, source links | markdown wording scan and local link check |
 | Synthetic stress benchmarking | `1d3da13 test: cover synthetic stress benchmark behavior` | `8671eff feat: add synthetic stress benchmark command` | `python3 -m src.main benchmark --stress` |
@@ -54,7 +55,7 @@ The suite uses unit, integration-style CLI, persistence, and mocked crawler test
 Current local verification:
 
 ```text
-55 passed
+57 passed
 Total coverage: 100.00%
 ```
 

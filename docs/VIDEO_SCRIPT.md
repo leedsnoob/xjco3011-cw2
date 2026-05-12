@@ -33,7 +33,7 @@ Say:
 - `explain` shows why a result is ranked by exposing term contribution details.
 - `benchmark --bm25-grid` reports local search timings and compares three BM25 parameter settings.
 - `benchmark --stress` builds synthetic local indexes and shows scaling evidence without hitting the live website.
-- The benchmark also compares TF-IDF and BM25 top results and reports timing for word lookup, TF-IDF search, BM25 search, phrase search, and explain.
+- The benchmark compares a naive full-token scan with the optimized inverted-index query path, then reports TF-IDF, BM25, phrase search, and explain timings.
 
 ## 2:00-3:30 Code Walkthrough
 
@@ -51,6 +51,7 @@ Say:
 - BM25 uses default `k1=1.2` and `b=0.75` because there are no labelled relevance judgments for tuning.
 - The benchmark compares nearby BM25 settings to show ranking stability and makes no training claim.
 - The complexity evidence covers word lookup, TF-IDF search, BM25 search, phrase search, explain, and synthetic stress benchmarking.
+- The optimization evidence shows a before-and-after comparison: a naive scan checks reconstructed page tokens, while the optimized query uses posting-list intersection before scoring.
 - Positions enable exact phrase search.
 - JSON is chosen because it is easy to inspect and submit.
 
@@ -67,7 +68,7 @@ Say:
 - Tests mock HTTP and sleep, so crawler behavior is tested quickly.
 - Tests cover crawler, indexer, search, persistence, CLI, edge cases, TF-IDF, BM25, explain, and benchmark behavior.
 - CLI tests now also assert progress output for the commands that can otherwise look silent.
-- The current local suite has 55 tests and 100% coverage.
+- The current local suite has 57 tests and 100% coverage.
 - The CI workflow runs tests and a coverage gate automatically.
 
 ## 4:00-4:30 Version Control

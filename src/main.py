@@ -260,8 +260,17 @@ class SearchShell:
         timings["word_lookup_ms"] = (time.perf_counter() - lookup_start) * 1000
 
         print(format_progress_line("Run ranking queries", 3, 5), flush=True)
+        naive_start = time.perf_counter()
+        self.index.naive_scan_find(BENCHMARK_QUERY)
+        timings["naive_scan_ms"] = (time.perf_counter() - naive_start) * 1000
+
+        optimized_start = time.perf_counter()
+        optimized_results = self.index.find(BENCHMARK_QUERY, ranker="tfidf")
+        timings["optimized_query_ms"] = (time.perf_counter() - optimized_start) * 1000
+        timings["tfidf_query_ms"] = timings["optimized_query_ms"]
+        result_sets["tfidf"] = optimized_results
+
         queries = {
-            "tfidf_query_ms": (BENCHMARK_QUERY, "tfidf"),
             "bm25_query_ms": (BENCHMARK_QUERY, "bm25"),
             "phrase_query_ms": ('"good friends"', "tfidf"),
         }
@@ -284,6 +293,12 @@ class SearchShell:
         print(f"- load_ms={load_ms:.3f}")
         for label, elapsed in timings.items():
             print(f"- {label}={elapsed:.3f}")
+        speedup = (
+            timings["naive_scan_ms"] / timings["optimized_query_ms"]
+            if timings["optimized_query_ms"]
+            else 0.0
+        )
+        print(f"- optimized_vs_naive_speedup={speedup:.2f}x")
         self._print_ranking_comparison(result_sets)
 
         if include_bm25_grid:
