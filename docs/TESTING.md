@@ -27,7 +27,7 @@ The project uses `pyproject.toml` to configure pytest and coverage. The coverage
 Current local result:
 
 ```text
-57 passed
+60 passed
 Total coverage: 100.00%
 ```
 
@@ -54,7 +54,7 @@ The test suite covers:
 - typo suggestions;
 - CLI `load`, `print`, `find`, `help`, unknown command, and `exit`.
 - CLI progress output for build, load, print, find, explain, benchmark, BM25 grid comparison, and synthetic stress benchmark commands.
-- CLI `explain`, `benchmark`, invalid ranker, missing index, EOF, and interactive loop handling.
+- CLI `explain`, `benchmark`, invalid ranker, missing index, invalid saved index JSON, EOF, and interactive loop handling.
 - synthetic stress benchmark generation, formatting, validation, and CLI output.
 
 ## Mocking Strategy
@@ -95,6 +95,7 @@ The coverage gate remains 90% because CI gates should prevent regressions while 
 - interactive shell EOF;
 - interactive shell command loop before exit;
 - missing index handling for `print`, `explain`, and `benchmark`;
+- invalid saved index JSON handling for `load`, `find`, `explain`, and `benchmark`;
 - invalid ranker handling for both `find` and `explain`;
 - no-result formatting for `explain`.
 - malformed `--ranker` usage with no query;

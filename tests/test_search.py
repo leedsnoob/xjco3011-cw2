@@ -83,6 +83,28 @@ def test_index_store_saves_and_loads_json(tmp_path) -> None:
     assert loaded.index["good"]["https://quotes.toscrape.com/page/2/"]["frequency"] == 2
 
 
+def test_index_store_reports_invalid_json_with_context(tmp_path) -> None:
+    import pytest
+    from src import search
+
+    path = tmp_path / "index.json"
+    path.write_text("{bad json", encoding="utf-8")
+
+    with pytest.raises(search.InvalidIndexError, match="Invalid index file"):
+        search.IndexStore(path).load()
+
+
+def test_index_store_reports_invalid_json_shape_with_context(tmp_path) -> None:
+    import pytest
+    from src import search
+
+    path = tmp_path / "index.json"
+    path.write_text("{}", encoding="utf-8")
+
+    with pytest.raises(search.InvalidIndexError, match="Invalid index file format"):
+        search.IndexStore(path).load()
+
+
 def test_format_index_entry_prints_frequency_and_positions() -> None:
     from src.search import SearchIndex
 

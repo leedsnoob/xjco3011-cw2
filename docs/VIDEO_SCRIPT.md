@@ -68,7 +68,7 @@ Say:
 - Tests mock HTTP and sleep, so crawler behavior is tested quickly.
 - Tests cover crawler, indexer, search, persistence, CLI, edge cases, TF-IDF, BM25, explain, and benchmark behavior.
 - CLI tests now also assert progress output for the commands that can otherwise look silent.
-- The current local suite has 57 tests and 100% coverage.
+- The current local suite has 60 tests and 100% coverage.
 - The CI workflow runs tests and a coverage gate automatically.
 
 ## 4:00-4:30 Version Control
