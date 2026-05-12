@@ -37,7 +37,7 @@ The project crawls the quote website politely, builds a case-insensitive inverte
 - Provides the required coursework commands: `build`, `load`, `print <word>`, and `find <query>`.
 - Adds higher-band search features: TF-IDF ranking, optional BM25 ranking, exact phrase search, typo suggestions, explainable score breakdowns, and benchmark output.
 - Adds a synthetic stress benchmark for local index/query scaling evidence.
-- Includes 48 automated tests with mocked HTTP responses, mocked politeness delay, CLI checks, persistence checks, edge cases, branch coverage, and a 90% CI coverage gate.
+- Includes 55 automated tests with mocked HTTP responses, mocked politeness delay, CLI checks, persistence checks, edge cases, branch coverage, and a 90% CI coverage gate.
 - Documents algorithm choices, complexity, performance evidence, GenAI reflection, and professional Git workflow.
 
 ## Quick Start
@@ -266,7 +266,8 @@ GitHub Actions runs the same checks on Python 3.9 and 3.12 with a configured cov
 |   |-- test_crawler.py
 |   |-- test_indexer.py
 |   |-- test_main.py
-|   `-- test_search.py
+|   |-- test_search.py
+|   `-- test_stress_benchmark.py
 |-- data/
 |   `-- index.json       # generated compiled index
 |-- docs/

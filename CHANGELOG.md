@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.9 - Review Readiness Polish
+
+### Changed
+
+- Corrected README testing evidence from 48 to 55 automated tests.
+- Added the stress benchmark test file to the README project structure.
+
 ## v1.0.8 - CLI Progress and Environment Clarity
 
 ### Added
