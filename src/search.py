@@ -107,6 +107,26 @@ class SearchIndex:
 
         return sorted(results, key=lambda result: (-result.score, result.url))
 
+    def naive_scan_find(self, query: str) -> list[str]:
+        """Return matching URLs by simulating an unindexed full-token scan."""
+
+        phrase_mode, terms = normalise_query(query)
+        if not terms:
+            return []
+
+        page_tokens = self._reconstruct_page_tokens()
+        matches: list[str] = []
+
+        for url in sorted(self.pages):
+            tokens = page_tokens.get(url, [])
+            if phrase_mode:
+                if contains_phrase(tokens, terms):
+                    matches.append(url)
+            elif all(term in tokens for term in terms):
+                matches.append(url)
+
+        return matches
+
     def explain(self, query: str, ranker: str = "tfidf") -> list[dict[str, Any]]:
         """Return per-result ranking details for a query."""
 
@@ -236,6 +256,28 @@ class SearchIndex:
                 return True
         return False
 
+    def _reconstruct_page_tokens(self) -> dict[str, list[str]]:
+        """Rebuild sparse page token lists from persisted positions for baselines."""
+
+        page_tokens = {
+            url: [""] * self.document_length(url)
+            for url in self.pages
+        }
+
+        for term, postings in self.index.items():
+            for url, posting in postings.items():
+                positions = posting["positions"]
+                if not positions:
+                    continue
+                tokens = page_tokens.setdefault(url, [])
+                max_position = max(positions)
+                if len(tokens) <= max_position:
+                    tokens.extend([""] * (max_position + 1 - len(tokens)))
+                for position in positions:
+                    tokens[position] = term
+
+        return page_tokens
+
 
 class IndexStore:
     """Read and write the compiled JSON index file."""
@@ -278,6 +320,20 @@ def validate_ranker(ranker: str) -> None:
 
     if ranker not in {"frequency", "tfidf", "bm25"}:
         raise ValueError(f"Unknown ranker: {ranker}")
+
+
+def contains_phrase(tokens: list[str], terms: list[str]) -> bool:
+    """Return whether a plain token list contains consecutive query terms."""
+
+    if not terms:
+        return False
+    if len(terms) > len(tokens):
+        return False
+
+    return any(
+        tokens[start:start + len(terms)] == terms
+        for start in range(len(tokens) - len(terms) + 1)
+    )
 
 
 def format_results(

@@ -25,6 +25,9 @@ class StressBenchmarkResult:
     index_bytes: int
     candidate_count: int
     build_ms: float
+    naive_scan_ms: float
+    optimized_query_ms: float
+    optimized_vs_naive_speedup: float
     tfidf_query_ms: float
     bm25_query_ms: float
     phrase_query_ms: float
@@ -92,9 +95,14 @@ def run_stress_benchmark(
 
         index_bytes = len(json.dumps(payload, sort_keys=True).encode("utf-8"))
 
+        naive_start = time.perf_counter()
+        index.naive_scan_find(STRESS_QUERY)
+        naive_scan_ms = (time.perf_counter() - naive_start) * 1000
+
         tfidf_start = time.perf_counter()
         tfidf_results = index.find(STRESS_QUERY, ranker="tfidf")
         tfidf_query_ms = (time.perf_counter() - tfidf_start) * 1000
+        speedup = naive_scan_ms / tfidf_query_ms if tfidf_query_ms else 0.0
 
         bm25_start = time.perf_counter()
         index.find(STRESS_QUERY, ranker="bm25")
@@ -115,6 +123,9 @@ def run_stress_benchmark(
                 index_bytes=index_bytes,
                 candidate_count=len(tfidf_results),
                 build_ms=build_ms,
+                naive_scan_ms=naive_scan_ms,
+                optimized_query_ms=tfidf_query_ms,
+                optimized_vs_naive_speedup=speedup,
                 tfidf_query_ms=tfidf_query_ms,
                 bm25_query_ms=bm25_query_ms,
                 phrase_query_ms=phrase_query_ms,
@@ -132,15 +143,18 @@ def format_stress_benchmark(results: list[StressBenchmarkResult]) -> str:
         "Synthetic stress benchmark:",
         f"- query={STRESS_QUERY}",
         f"- default_tokens_per_page={DEFAULT_TOKENS_PER_PAGE}",
-        "| pages | terms | index_kb | candidates | build_ms | tfidf_ms | bm25_ms | phrase_ms | explain_ms |",
-        "|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+        "| pages | terms | index_kb | candidates | build_ms | naive_ms | optimized_ms | speedup | tfidf_ms | bm25_ms | phrase_ms | explain_ms |",
+        "|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
 
     for result in results:
         lines.append(
             f"| {result.page_count} | {result.unique_terms} | "
             f"{result.index_bytes / 1024:.1f} | {result.candidate_count} | "
-            f"{result.build_ms:.3f} | {result.tfidf_query_ms:.3f} | "
+            f"{result.build_ms:.3f} | {result.naive_scan_ms:.3f} | "
+            f"{result.optimized_query_ms:.3f} | "
+            f"{result.optimized_vs_naive_speedup:.2f}x | "
+            f"{result.tfidf_query_ms:.3f} | "
             f"{result.bm25_query_ms:.3f} | {result.phrase_query_ms:.3f} | "
             f"{result.explain_ms:.3f} |"
         )
