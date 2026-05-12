@@ -31,6 +31,9 @@ def test_stress_benchmark_reports_growth_across_synthetic_sizes() -> None:
     for result in results:
         assert result.candidate_count > 0
         assert result.build_ms >= 0
+        assert result.naive_scan_ms >= 0
+        assert result.optimized_query_ms >= 0
+        assert result.optimized_vs_naive_speedup >= 0
         assert result.tfidf_query_ms >= 0
         assert result.bm25_query_ms >= 0
         assert result.phrase_query_ms >= 0
@@ -43,7 +46,7 @@ def test_format_stress_benchmark_is_video_ready() -> None:
     output = format_stress_benchmark(results)
 
     assert "Synthetic stress benchmark:" in output
-    assert "| pages | terms | index_kb | candidates | build_ms |" in output
+    assert "| pages | terms | index_kb | candidates | build_ms | naive_ms | optimized_ms | speedup |" in output
     assert "| 4 |" in output
 
 

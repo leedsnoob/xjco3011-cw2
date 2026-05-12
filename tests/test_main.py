@@ -225,6 +225,9 @@ def test_cli_benchmark_command_reports_timings(tmp_path, capsys) -> None:
     assert "Progress [##........] 1/5 Load benchmark index" in output
     assert "Progress [##########] 5/5 Print ranking comparison" in output
     assert "load_ms=" in output
+    assert "naive_scan_ms=" in output
+    assert "optimized_query_ms=" in output
+    assert "optimized_vs_naive_speedup=" in output
     assert "word_lookup_ms=" in output
     assert "tfidf_query_ms=" in output
     assert "bm25_query_ms=" in output
