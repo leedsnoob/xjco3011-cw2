@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import time
 from dataclasses import dataclass
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 
 from src.indexer import PageDocument, build_search_index
 from src.search import SearchIndex
@@ -69,12 +69,16 @@ def synthetic_documents(
 def run_stress_benchmark(
     page_counts: Iterable[int] = DEFAULT_STRESS_PAGE_COUNTS,
     tokens_per_page: int = DEFAULT_TOKENS_PER_PAGE,
+    progress: Callable[[int, int, int], None] | None = None,
 ) -> list[StressBenchmarkResult]:
     """Benchmark index build and query paths across synthetic corpus sizes."""
 
     results: list[StressBenchmarkResult] = []
+    counts = tuple(page_counts)
 
-    for page_count in page_counts:
+    for step, page_count in enumerate(counts, start=1):
+        if progress:
+            progress(step, len(counts), page_count)
         documents = synthetic_documents(page_count, tokens_per_page=tokens_per_page)
 
         build_start = time.perf_counter()
