@@ -10,6 +10,7 @@ TDD is shown as a repeated workflow across several commits.
 |---|---|---|---|
 | Core crawler, index, search, CLI | `552f5fc test: define coursework search engine behavior` | `9efe172 feat: implement crawler and inverted index`, `f5d9a1f feat: implement search persistence and CLI` | `tests/test_crawler.py`, `tests/test_indexer.py`, `tests/test_search.py`, `tests/test_main.py` |
 | CLI and search edge cases | `d2866ff test: raise coverage for CLI and search edges` | Existing CLI/search behavior hardened before release | `python3 -m pytest --cov=src --cov-report=term-missing` |
+| Invalid index file handling | Current invalid-index regression tests in `tests/test_search.py` and `tests/test_main.py` | `InvalidIndexError` converts corrupt JSON into a user-facing rebuild message | `load`, `find`, `explain`, and `benchmark` do not expose JSON tracebacks |
 | Mocked crawler and quality gates | `4575075 test: strengthen mocked edge case coverage` | `6b9a21c ci: add automated pytest coverage workflow` | `.github/workflows/tests.yml`, `pyproject.toml` |
 | TF-IDF, BM25, explain, benchmark | `23bcd9d test: cover tf-idf bm25 explain and benchmark` | `c2fa7a2 feat: add explainable tf-idf and bm25 ranking` | `python3 -m src.main explain good friends` |
 | BM25 parameter comparison | `a8f9f51 test: cover coverage gaps and bm25 parameter comparison` | `a89b4dd feat: add bm25 parameter benchmark comparison` | `python3 -m src.main benchmark --bm25-grid` |
@@ -55,7 +56,7 @@ The suite uses unit, integration-style CLI, persistence, and mocked crawler test
 Current local verification:
 
 ```text
-57 passed
+60 passed
 Total coverage: 100.00%
 ```
 

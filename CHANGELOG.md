@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.0.11 - Invalid Index Error Handling
+
+### Added
+
+- User-facing handling for invalid or malformed saved index JSON.
+- Regression tests covering corrupt index loading through `IndexStore` and CLI commands.
+
+### Changed
+
+- Updated test evidence totals to 60 automated tests.
+
 ## v1.0.10 - Benchmark Baseline Comparison
 
 ### Added

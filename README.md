@@ -37,7 +37,7 @@ The project crawls the quote website politely, builds a case-insensitive inverte
 - Provides the required coursework commands: `build`, `load`, `print <word>`, and `find <query>`.
 - Adds higher-band search features: TF-IDF ranking, optional BM25 ranking, exact phrase search, typo suggestions, explainable score breakdowns, and benchmark output.
 - Adds a synthetic stress benchmark for local index/query scaling evidence.
-- Includes 57 automated tests with mocked HTTP responses, mocked politeness delay, CLI checks, persistence checks, edge cases, branch coverage, and a 90% CI coverage gate.
+- Includes 60 automated tests with mocked HTTP responses, mocked politeness delay, CLI checks, persistence checks, edge cases, branch coverage, and a 90% CI coverage gate.
 - Documents algorithm choices, complexity, performance evidence, GenAI reflection, and professional Git workflow.
 
 ## Quick Start
@@ -240,7 +240,7 @@ python3 -m compileall src tests
 Current local verification:
 
 ```text
-57 passed
+60 passed
 Total coverage: 100.00%
 ```
 
