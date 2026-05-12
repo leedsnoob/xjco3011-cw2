@@ -53,9 +53,9 @@ Synthetic stress benchmark:
 - default_tokens_per_page=80
 | pages | terms | index_kb | candidates | build_ms | tfidf_ms | bm25_ms | phrase_ms | explain_ms |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 100 | 245 | 479.9 | 50 | 5.427 | 0.137 | 0.199 | 0.265 | 0.309 |
-| 500 | 645 | 2427.6 | 250 | 38.262 | 1.258 | 0.928 | 0.763 | 1.385 |
-| 1000 | 1145 | 4862.2 | 500 | 77.815 | 1.448 | 2.209 | 1.511 | 2.705 |
+| 100 | 245 | 479.9 | 50 | 4.995 | 0.194 | 0.144 | 0.171 | 0.224 |
+| 500 | 645 | 2427.6 | 250 | 30.074 | 0.755 | 0.724 | 0.723 | 1.253 |
+| 1000 | 1145 | 4862.2 | 500 | 73.177 | 1.613 | 1.679 | 2.039 | 3.272 |
 ```
 
 The row growth is the important evidence: the synthetic index size and candidate count increase with the corpus, while local query timings remain low for this coursework-scale implementation.
